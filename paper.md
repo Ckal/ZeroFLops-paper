@@ -8,7 +8,9 @@
 
 ## Abstract
 
-We present a character-level language model whose training occurs in a continuous "soft field" of probability distributions over GF(2⁸), but whose final trained form compiles to a pure integer program requiring only XOR operations, table lookups, and integer additions. The architecture uses Walsh-Hadamard transforms for differentiable XOR convolution, learned S-boxes as non-linear substitutions, and dilated causal wiring for temporal memory. Through a novel training curriculum—soft-field learning, parameter entropy minimization, and late-stage straight-through estimation—we achieve a Hard BPC of 3.071 on Tiny Shakespeare validation data, surpassing the interpolated trigram baseline (3.087 BPC) while using zero floating-point operations at inference.
+We present a character-level language model whose training occurs in a continuous "soft field" of probability distributions over GF(2⁸), but whose final trained form compiles to an integer forward pass: the embedding, GF mixing, and S-box substitution layers require only XOR operations, table lookups, and integer additions. The architecture uses Walsh-Hadamard transforms for differentiable XOR convolution, learned S-boxes as non-linear substitutions, and dilated causal wiring for temporal memory. Through a training curriculum—soft-field learning, parameter entropy minimization, and late-stage straight-through estimation—we obtain a Hard BPC of 3.071 on Tiny Shakespeare validation data (full validation split, 110,592 characters, d=32, 3 layers, 16.78M parameters).
+
+We report this result **without** claiming it beats classical n-gram models. A properly-tuned trigram (stupid-backoff, α=0.6) reaches 2.428 BPC on the identical split, so the model trails the best n-gram baseline by 0.64 BPC; earlier versions of this work reported a 3.087 BPC trigram baseline and claimed a 0.016 BPC win, which was an artefact of under-tuned comparison. The contribution we claim is architectural rather than competitive: a language model whose non-trivial arithmetic is expressed in the smallest finite field, which admits a straight-through training curriculum that preserves the soft/hard gap at the sub-0.2-BPC level. The read-out layer remains float32; the zero-floating-point property holds for the trunk.
 
 ---
 
@@ -59,13 +61,21 @@ Each failure taught us something fundamental about discrete optimization. Each f
 
 ### The Breakthrough
 
-At step 82,400 of the V6 training run, the Hard BPC hit 3.081, crossing below the trigram baseline for the first time. The final evaluation confirmed:
+The V6 training run ran for 120,000 steps. At step 82,400 the Hard BPC hit
+3.081, crossing below the *interpolated* trigram baseline quoted below for the
+first time. Training continued to step 120,000, and the final full-validation
+pass reported:
 
 ```
 FINAL: soft 2.902 | HARD 3.071 | bigram 3.602 | trigram 3.087
 ```
 
-A pure integer program—running on XORs and table lookups alone—had beaten a classical n-gram model at language prediction.
+**Caveat, stated plainly:** the 3.071 is the end-of-training full-validation
+number of a 120,000-step run. It is *not* the value at step 82,400 (that was
+3.081). A properly-tuned trigram — stupid-backoff with α=0.6, or interpolated
+with absolute discounting d=0.9 — reaches 2.43–2.46 BPC on the same split, so
+the model does **not** beat a correctly-implemented n-gram. See §5.5 for the
+honest framing.
 
 ---
 
@@ -377,8 +387,10 @@ After training, the entire model compiles to:
 | Bias | 256 floats | 1 KB |
 
 - **Total program size:** ~33 MB (dominated by readout tables)
-- **Inference operations per character:** ~30,000 lookups + ~3,000 XORs
-- **Floating point operations: ZERO**
+- **Inference operations per character:** ~30,000 lookups + ~3,000 XORs in the
+  trunk; **~459,008 float32 multiply-accumulates in the read-out**
+- **Floating point operations in the trunk: ZERO.** The read-out is float32
+  (see §6.1) — "zero FLOPs" describes the GF layers, not the whole model.
 
 ---
 
@@ -442,10 +454,22 @@ The hardest bug to diagnose. In a 3-layer block cipher:
 | Model | BPC | Operations |
 |-------|-----|------------|
 | Uniform (8 bits) | 8.000 | — |
-| Bigram baseline | 3.602 | Table lookup |
-| Trigram baseline | 3.087 | Table lookup |
+| Bigram baseline (add-one) | 3.597 | Table lookup |
+| Trigram, **stupid-backoff α=0.6** | **2.428** | Table lookup |
+| Trigram, interpolated abs-discount d=0.9 | 2.461 | Table lookup |
+| Trigram, interpolated abs-discount d=0.5 | 2.853 | Table lookup |
+| Trigram, interpolated (as originally quoted) | 3.087 | Table lookup |
 | GF(256) Soft | 2.902 | Float softmax + einsum |
-| **GF(256) Hard** | **3.071** | **XOR + table lookup ONLY** |
+| **GF(256) Hard** | **3.071** | **XOR + table lookup (trunk); float readout** |
+
+> **Read this table honestly.** The Hard model (3.071) beats the *worst-tuned*
+> trigram quoted in earlier versions of this paper (3.087) and beats bigram, but
+> it **loses to every properly-tuned trigram by 0.36–0.64 BPC.** The original
+> claim — "surpassing the interpolated trigram baseline" — was an artefact of
+> comparing against an under-tuned baseline. Re-deriving all three smoothing
+> schemes on the identical split (`src/baseline_check.py`) gives the numbers
+> above. The architecture's contribution is the *integer-trunk formulation*, not
+> a compression-ratio win.
 
 ### 6.2 Training Curve Summary
 
@@ -460,11 +484,17 @@ FINAL:      Soft 2.902 | HARD 3.071 | Entropy 0.051
 
 ### 6.3 What the Hard BPC Proves
 
-- **BPC < 3.602 (Bigram):** Model uses >1 byte of context ✓
-- **BPC < 3.087 (Trigram):** Model uses >2 bytes of context ✓
-- **BPC ≈ 3.07:** Model captures 4-5 gram statistics via XOR mixing ✓
+- **BPC < 3.597 (Bigram):** The model conditions on more than 1 byte of context ✓
+- **BPC < 2.853 (worst interpolated trigram):** The model conditions on more
+  than 2 bytes of context ✓
+- **BPC > 2.428 (best trigram):** The model does *not* beat a tuned n-gram ✗
 
-This proves the GF(256) hidden state acts as a compressed distributed memory, storing long-range dependencies in the algebraic structure of the field.
+What the hard path does establish is genuine: **the entire forward pass —
+embedding, GF mixing, S-box substitution — executes as table lookups, XORs,
+and integer additions, with no multiplies and no float arithmetic in the
+trunk.** A 3.07 BPC language model can be *evaluated* with integer-only
+primitives. That is the interesting result. Whether it should be described as
+"beating n-grams" is a different question, and §6.1 shows the answer is no.
 
 ### 6.4 Generated Text Sample
 
@@ -922,20 +952,26 @@ if __name__ == "__main__":
 ### 7.2 Recommended Launch Command
 
 ```bash
-python gf256_markov_lm.py \
+# Canonical V6 reproduction — matches the run that produced HARD 3.071.
+# (defaults in gf256_markov_lm_v6.py already equal these values)
+python gf256_markov_lm_v6.py \
     --seed 32 \
-    --steps 20000 \
+    --steps 120000 \
     --batch 4 \
     --ctx 128 \
     --d 32 \
     --layers 3 \
+    --fan_in 3 \
     --ent_max 2.0 \
     --ent_warmup 1000 \
-    --hard_start 12000 \
-    --hard_ramp 4000 \
+    --perm_w 1.0 \
+    --hard_start 10000 \
+    --hard_ramp 2000 \
     --hard_w 0.5 \
     --lr 3e-3 \
-    --eval_every 500
+    --eval_every 400 \
+    --eval_seqs 64 \
+    --eval_chunk_size 4
 ```
 
 ---
