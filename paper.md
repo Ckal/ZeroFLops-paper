@@ -1015,9 +1015,9 @@ python gf256_markov_lm_v6.py \
 
 ## 10. Conclusion
 
-We have demonstrated that language modeling does not require floating-point matrix multiplication. Through careful training of differentiable Galois Field operations, we can compile the statistical structure of natural language into a pure integer program that runs on XORs and table lookups alone.
+We have demonstrated that the deep stack of a language model does not require floating-point matrix multiplication. Through careful training of differentiable Galois Field operations, we can compile the statistical structure of natural language into an integer program whose trunk runs on XORs and table lookups alone, with dense arithmetic confined to a single float32 read-out stage.
 
-The GF(256) Lagrange Field Transformer achieves a Hard BPC of 3.071 on Tiny Shakespeare—surpassing the trigram baseline—while requiring zero FLOPs at inference. This opens the door to language-like predictive models on ultra-low-power hardware, cryptographic AI obfuscation, and a new class of algebraic neural networks.
+The GF(256) Lagrange Field Transformer achieves a Hard BPC of 3.071 on Tiny Shakespeare, beating a bigram baseline by 0.53 BPC while its trunk executes zero floating-point operations. It does **not** surpass a properly-tuned trigram, which reaches 2.428—a deficit of 0.36 BPC that we report rather than hide. What the result does establish is the *mechanism*: a differentiable training procedure whose converged model is a pure integer program running on XORs and table lookups, with a float32 read-out of ~459,008 multiply-accumulates confined to the trunk's output stage. That separation of concerns—algebraic computation in the trunk, dense linear algebra only at the read-out—is the contribution, and it opens a path to language-like predictive models on ultra-low-power hardware, cryptographic AI obfuscation, and a new class of algebraic neural networks.
 
 The apple didn't fall. It was XORed.
 
