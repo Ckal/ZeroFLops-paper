@@ -192,3 +192,13 @@ The hardened form is described as "a pure integer program." Measured
 expectation — LUT-compiled, fixed-width, memory-bound — that the artifact does
 not meet. The `main.cpp` C++ port in `reference/` is the artefact that would
 make the claim honest; it needs to be the headline, not an appendix.
+
+## F12 — Lag set vs channel count (clarification, not a bug)
+
+`lags = (0, 1, 2, 4, 8, 16, 32, 64)` looks suspicious against `d = 32`
+because the widest lag is **twice** the channel count, but this is a
+*time-indexed* lag, not a channel index. Each path samples
+`x[ch, t - lag]`; with `d = 32` channels and the lag measured in *bytes* the
+context window is 65 bytes long. The paper specifies this lag set verbatim
+(§4, §7) and the V7 script (`gf256_markov_lm.py`, line 118) extends the same
+set with 128 and 256, confirming the convention. No change needed.
