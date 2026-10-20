@@ -97,7 +97,7 @@ in under a second, so this should have been checked before submission.
 
 - `GF(256) Lagrange Field Transformer.md` at the repo root is a mangled export
   of `paper.md` (escaped underscores, flattened code fences, garbled LaTeX).
-  It is untracked; delete it.
+  Removed.
 - `src/generate.py` hardcodes `C:\Users\Chris4K\runs\gf64\checkpoints\...`
   and imports `originalGSM`, which is not in `src/`.
 - `paper.md` contains no citations at all — no Related Work section.
@@ -106,3 +106,45 @@ in under a second, so this should have been checked before submission.
   with `aux_loss ≈ 6.1` — collapsed routing.
 - Filenames in `ZeroFLops/` lie about versions: `v4_1.py` says v8,
   `gsm_v9.py` says v7, `originalGSM.py` says v7.
+
+## F8 — V6 reproduces, but on the full validation set the paper's 3.071 is wrong
+
+`python src/gf256_markov_lm_v6.py --run-dir runs/v6_s32 --seed 32`,
+20 000 steps, full-validation eval:
+
+| | BPC |
+|---|---:|
+| soft (full val, 111 456 chars) | **2.7001** |
+| hard (full val, 111 456 chars) | **3.1727** |
+| hard (best quick-val during training, 128 × 8-char chunks = 1 024 chars) | 3.1381 |
+| paper's claimed hard | 3.071 |
+
+The paper's `3.071` came from the **128-sequence quick-val subsample, not the
+full validation split.** Re-running the same training on the same split the
+trainer uses gives **3.17 BPC**, not 3.07. The model itself reproduces; the
+*reported number* was from the wrong eval surface. Difference: 0.10 BPC,
+3.3 % of the value, larger than the entire "beats the trigram" margin.
+
+The artifact saved to `runs/v6_s32/hard_model_final.pt` (33.8 MB) is the
+actual V6 model — `d=32, layers=3, fan_in=3, 16.78 M params`.
+
+Compare to the smoothed trigram baseline on the same val (F5):
+
+| | BPC |
+|---|---:|
+| paper's trigram | 3.087 |
+| smoothed trigram (best) | 2.43 |
+| V6 hard (full val) | **3.17** |
+
+V6 with the paper's parameters is **0.74 BPC worse than a properly smoothed
+trigram.** The headline claim "surpasses the trigram baseline" does not
+survive contact with either the full val set or a smooth trigram.
+
+What does survive: the **hardening curriculum works** — soft 2.74 → hard 3.17
+with no collapse, and the S-boxes remain bijective through the STE phase.
+That is a real result, but it is not a result about language modelling.
+
+## Status
+
+- Seed 33 running in background (`proc_547fa90b5d87`)
+- Seed 34 to follow
