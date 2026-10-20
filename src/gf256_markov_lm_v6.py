@@ -1,10 +1,15 @@
 """
 gf256_markov_lm_v6.py -- Lagrange Field Transformer V6 (the paper's model)
 ==============================================================================
-This is the configuration the paper describes: d=32, layers=3, fan_in=3,
-lags (0,1,2,4,8,16,32,64), n_coef=8. Program size ~33 MB.
+This is the configuration the paper describes and reports (§5.2, §6.1, §7.2):
+    d=32, layers=3, fan_in=4, lags (0,1,2,4,8,16,32,64), n_coef=8,
+    82,400 steps, gentle STE from step 12,000 over a 4,000 ramp.
 
-V7 (d=64, layers=6, fan_in=4, lags to 256) lives in gf256_markov_lm_v7.py.
+    A cheaper ablation --fan_in 3 --steps 20000 exists but is NOT the
+    reported V6 (see FINDINGS.md F8).
+
+    V7 (d=64, layers=6, fan_in=4, lags to 256) lives in gf256_markov_lm.py,
+    which is what artifacts/gf256_hard_model.pt actually contains (F1).
 
 Differences from the original V6 script, all of which affect whether a run is
 trustworthy:
@@ -170,9 +175,12 @@ class GFLayer(nn.Module):
 # Full Model
 # ────────────────────────────────────────────────────────────────────────────
 class GFMarkovLM(nn.Module):
-    """V6 defaults: d=32, layers=3, fan_in=3, 8 lags, 8 GF coefficients."""
+    """V6 defaults: d=32, layers=3, fan_in=4, 8 lags, 8 GF coefficients.
 
-    def __init__(self, d=32, layers=3, fan_in=3,
+    fan_in=3 is the cheaper ablation variant, not the reported V6.
+    """
+
+    def __init__(self, d=32, layers=3, fan_in=4,
                  lags=(0, 1, 2, 4, 8, 16, 32, 64), n_coef=8,
                  bigram_logp=None, seed=0):
         super().__init__()
@@ -496,13 +504,14 @@ def build_parser():
     ap.add_argument("--run-dir", default=None,
                     help="Directory for config.json, logs/ and checkpoints/. "
                          "Default: runs/v6_seed<seed>")
-    # V6 architecture (paper §4)
+    # V6 architecture (paper §4). NOTE: §5.2 wiring and §7.2 command line
+    # both use fan_in=4 for the reported V6; fan_in=3 is the cheaper ablation.
     ap.add_argument("--d", type=int, default=32)
     ap.add_argument("--layers", type=int, default=3)
-    ap.add_argument("--fan_in", type=int, default=3)
-    # V6 optimisation recipe (paper §5, §7.2)
+    ap.add_argument("--fan_in", type=int, default=4)
+    # V6 optimisation recipe (paper §5, §7.2). §6.1 reports FINAL at 82,400.
     ap.add_argument("--seed", type=int, default=32)
-    ap.add_argument("--steps", type=int, default=20000)
+    ap.add_argument("--steps", type=int, default=82400)
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--ctx", type=int, default=128)
     ap.add_argument("--lr", type=float, default=3e-3)

@@ -146,5 +146,49 @@ That is a real result, but it is not a result about language modelling.
 
 ## Status
 
-- Seed 33 running in background (`proc_547fa90b5d87`)
-- Seed 34 to follow
+- **Paper-faithful run in flight:** `runs/v6p_s32` — d=32, layers=3,
+  fan_in=4, 82,400 steps, STE from 12,000 / 4,000 ramp, seed 32.
+  Process `proc_aa5a16a3e54a`. ~2 h estimated.
+- `src/gf256_markov_lm_v6.py` defaults now match that configuration.
+- `runs/v6_s32` (fan_in=3, 20k steps) retained as a labelled ablation.
+
+## F9 — The paper contradicts itself on its own hyperparameters
+
+Same document, incompatible numbers:
+
+| location | fan_in | steps | soft BPC at end |
+|---|---:|---:|---:|
+| §5.2 wiring text | **4** | — | — |
+| §6.1 "The Breakthrough" | — | **82,400** | **2.902** |
+| §6.1 progress log | — | 82,400 | 2.915 (hard 3.081) |
+| §7 code listing `GFMarkovLM.__init__` | **3** | — | — |
+| §7.2 command line | — | — | `--hard_start 12000` |
+| §7 code listing argparse | — | — | `--hard_start 10000` |
+
+Two distinct values for `fan_in` (3 and 4) and two for `hard_start` (10,000
+and 12,000) inside the same paper. The reproduction cannot be unambiguous
+while the document specifies the model two different ways.
+
+The `fan_in=3` variant was also trained to 3.17 BPC at only 20,000 steps —
+better soft BPC (2.700 vs the paper's 2.902) but worse hard BPC. Note the
+paper's own run has a *worse* soft BPC at 4× the steps, which is itself odd
+and suggests its soft/hard balance differed.
+
+## F10 — The paper contains no Related Work and no citations
+
+`paper.md` is 990 lines / 36,400 bytes and contains **zero citations**. It
+never mentions: Walsh–Hadamard transforms, straight-through estimators
+(Bengio et al. 2013), knowledge distillation (Hinton et al. 2015), binary/
+finite-field neural networks (e.g. Guo et al. 2017 binarized neural networks),
+GF(2⁸) cryptography, AES S-box construction, or any prior work on integer-only
+inference. Every one of those is prior art that a reviewer will name
+immediately. Without a Related Work section this is not submittable.
+
+## F11 — Naming: the "hard" model is not what the paper calls a program
+
+The hardened form is described as "a pure integer program." Measured
+(`src/inspect_artifact.py`), it is a tensor program whose readout is a dense
+`float32` tensor applied by summation. Calling it a *program* sets an
+expectation — LUT-compiled, fixed-width, memory-bound — that the artifact does
+not meet. The `main.cpp` C++ port in `reference/` is the artefact that would
+make the claim honest; it needs to be the headline, not an appendix.
