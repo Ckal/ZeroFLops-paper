@@ -508,10 +508,10 @@ def build_parser():
     # both use fan_in=4 for the reported V6; fan_in=3 is the cheaper ablation.
     ap.add_argument("--d", type=int, default=32)
     ap.add_argument("--layers", type=int, default=3)
-    ap.add_argument("--fan_in", type=int, default=4)
+    ap.add_argument("--fan_in", type=int, default=3)
     # V6 optimisation recipe (paper §5, §7.2). §6.1 reports FINAL at 82,400.
     ap.add_argument("--seed", type=int, default=32)
-    ap.add_argument("--steps", type=int, default=82400)
+    ap.add_argument("--steps", type=int, default=120000)
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--ctx", type=int, default=128)
     ap.add_argument("--lr", type=float, default=3e-3)
@@ -521,8 +521,8 @@ def build_parser():
     ap.add_argument("--ent_max", type=float, default=2.0)
     ap.add_argument("--ent_warmup", type=int, default=1000)
     ap.add_argument("--perm_w", type=float, default=1.0)
-    ap.add_argument("--hard_start", type=int, default=12000)
-    ap.add_argument("--hard_ramp", type=int, default=4000)
+    ap.add_argument("--hard_start", type=int, default=10000)
+    ap.add_argument("--hard_ramp", type=int, default=2000)
     ap.add_argument("--hard_w", type=float, default=0.5)
     # eval
     ap.add_argument("--eval_every", type=int, default=500)

@@ -202,3 +202,48 @@ because the widest lag is **twice** the channel count, but this is a
 context window is 65 bytes long. The paper specifies this lag set verbatim
 (§4, §7) and the V7 script (`gf256_markov_lm.py`, line 118) extends the same
 set with 128 and 256, confirming the convention. No change needed.
+
+## F13 — **The notebook, not the paper, is the ground truth for V6**
+
+`src/INFERENCE-WOW.ipynb` contains the exact run that produced the paper's
+headline pair. Parsed out of the notebook (cell 5), the command was:
+
+```
+run_main_with_args(['--steps','120000','--batch','4','--seed','32',
+                    '--ctx','128','--eval_every','400','--eval_seqs','64',
+                    '--eval_chunk_size','4','--no_ckpt'])
+```
+
+with parser defaults in effect (cell 4's `build_parser`):
+
+| hyperparam | notebook (actual run) | paper says |
+|---|---|---|
+| `fan_in` | **3** | 4 (§5.2) |
+| `steps` | **120000** | 82,400 |
+| `hard_start` | **10000** | 12,000 (§7.2) |
+| `hard_ramp` | **2000** | 4,000 |
+| `hard_w` | 0.5 | 0.5 |
+| `d` / `layers` / `ctx` / `seed` | 32 / 3 / 128 / 32 | same |
+| `ent_max` / `ent_warmup` / `perm_w` | 2.0 / 1000 / 1.0 | same |
+
+**The paper reports 3.071 from a 120,000-step run, but states 82,400 steps.**
+3.071 is the *final full-validation* number at step 120,000, not the number at
+82,400. At 82,400 the notebook's own log shows **HARD 3.081** — which is what
+a paper claiming "FINAL at step 82,400" should have reported if it meant that
+step. The paper picked the best-looking endpoint of a 120k run and labelled it
+82,400.
+
+This is F10 and F9 combined: the paper's step count, `fan_in`, and
+`hard_start` are all contradicted by the run that actually generated its
+numbers. **The notebook must be treated as the specification; the paper's
+§7 text must be corrected to match it.**
+
+### Verification (parser-level, notebook cell 5, 301 eval points)
+- step 120000 → soft 2.964 / hard 3.154 (last *logged* eval)
+- **FINAL full val → soft 2.902 / HARD 3.071** ← the paper's number
+- best logged hard BPC = 3.081 at step 82,400
+
+The gap between the last logged eval (3.154) and FINAL (3.071) is 0.083 BPC.
+The `FINAL` line is a separate full-validation pass after training, not the
+step-120000 eval, so it is a legitimately different (and better) measurement —
+but it is *not* the "step 82,400" number the paper reports it as.
