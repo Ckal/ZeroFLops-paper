@@ -1,0 +1,13 @@
+# Caches and reproducibility noise
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+*.swp
+
+# Regenerable trained weights (kept as a release artifact in artifacts/, but
+# ignored on first commit so reviewers see one canonical binary)
+gf256_hard_model_best.pt
+
+# Local data downloads
+data/tinyshakespeare.txt.tmp
