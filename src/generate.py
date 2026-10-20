@@ -65,12 +65,21 @@ class GFCipher:
             return payload
 
         if isinstance(payload, dict) and {"model_state", "config"}.issubset(payload.keys()):
-                    raise ValueError(
-                        f"{path} is a float training checkpoint, not a hardened integer "
-                        "artifact. This repo's trainer (gf256_markov_lm_v6.py) only "
-                        "writes export_hard() payloads, so there is nothing to convert. "
-                        "Point --model at hard_model_final.pt or checkpoints/best_hard.pt."
-                    )
+            print(f"Detected training checkpoint at step {payload.get('step', 'unknown')}; exporting hard model...")
+            from originalGSM import GFMarkovLM
+
+            cfg = payload["config"]["training"]
+            data_info = payload.get("data", {})
+            model = GFMarkovLM(
+                d=cfg["d"],
+                layers=cfg["layers"],
+                fan_in=cfg["fan_in"],
+                bigram_logp=None,
+                seed=cfg["seed"],
+            )
+            model.load_state_dict(payload["model_state"], strict=True)
+            model.eval()
+            return model.export_hard()
 
         raise ValueError(f"Unsupported file format for generation: {path}")
         
@@ -175,11 +184,10 @@ class GFCipher:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-            "--model",
-            default=str(Path(__file__).resolve().parent.parent
-                        / "runs" / "v6_s32" / "hard_model_final.pt"),
-            help="Path to a hard-model artifact (raw hard payload or saved hard-model).",
-        )
+        "--model",
+        default=r"C:\Users\Chris4K\runs\gf64\checkpoints\step_000006000.pt",
+        help="Path to a hard-model artifact, raw hard payload, or training checkpoint.",
+    )
     parser.add_argument("--prompt", default="First Citizen:\n")
     parser.add_argument("--length", type=int, default=300)
     parser.add_argument("--temperature", type=float, default=0.7)
