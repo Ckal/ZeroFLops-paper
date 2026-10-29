@@ -2078,3 +2078,76 @@ make it dangerous.
   lines and do not treat it as a failure.
 - The watchdog must distinguish "log is old because the host slept" from
   "log is old because the trainer died".
+
+### 5x. The promotion scorer can score a pinned checkpoint file (2026-10-29)
+
+### The problem
+
+`tmp/measure_promotion_scorer.py` accepted only a **run directory**. A
+checkpoint *file* was rejected with "not a directory". That broke a real
+workflow: the trainer PRUNES old step snapshots (`--keep-last 3`), so a
+checkpoint that had been pinned to a stable path outside the run dir
+could no longer be scored at all. And in this session the step-20000
+artifact was pruned within minutes of being pinned.
+
+### The trap in the first fix
+
+The obvious fix — "find the owning run dir" — introduced a worse bug. The
+scorer picked the **first alphabetically** qualifying run dir and scored
+a 320,000-row V24 checkpoint against a **500-row scratch corpus**:
+
+```text
+runs/_probe/compare/step20000_hard.pt
+  (checkpoint file; scoring against owner run runs/_probe/_cron_repro)
+  corpus rows: 500  sidecar: (500, 19, 7)
+  step20000_hard.pt   LABEL 64.28%     <- WRONG, inflated
+```
+
+64.28 % vs the true 59.00 %. Scoring the same weights against a
+different corpus is **not a comparable measurement** — it is a
+different measurement wearing the same label. There are 12+ qualifying
+run dirs under `runs/_probe/`, of wildly different sizes (500 rows,
+1,500, 43,000, 70,000, 320,000).
+
+### The fix
+
+```bash
+# score a checkpoint FILE against a named corpus run
+./.venv-c4/Scripts/python.exe tmp/measure_promotion_scorer.py \
+    --corpus-run runs/_probe/v24 runs/_probe/compare/step20000_hard.pt
+```
+
+- `--corpus-run <dir>` names the run dir explicitly and wins outright.
+- Without it, the owner is resolved from the checkpoint's **ancestors**
+  (a snapshot in `runs/_probe/v24/checkpoints/` resolves to
+  `runs/_probe/v24`).
+- If that fails and **more than one** run dir qualifies, the scorer
+  **refuses and exits 1**, printing each candidate with its corpus row
+  count. It does not guess.
+
+### Verified
+
+| Case | Expected | Got |
+|---|---|---|
+| pinned file, no `--corpus-run` (ambiguous) | refuse, exit 1 | refused, exit 1, listed 12 candidates |
+| pinned file + `--corpus-run runs/_probe/v24` | 59.00 % | **59.00 %** (matches run-dir measurement) |
+| run dir (unchanged path) | 59.55 % / 58.52 % / 58.55 % | identical |
+
+All five pinned artefacts reproduce their run-dir scores exactly from
+stable paths.
+
+### Pinned artefacts now retained
+
+```text
+runs/_probe/compare/best_hard_step18000.pt   LABEL 59.55%  (meta.step=18000)
+runs/_probe/compare/step20000_hard.pt        LABEL 59.00%
+runs/_probe/compare/step22000_hard.pt        LABEL 58.52%
+runs/_probe/compare/step24000_hard.pt        LABEL 58.55%
+runs/_probe/compare/step26000_hard.pt        LABEL 58.70%
+```
+
+### The standing lesson
+
+A measurement tool that silently picks the wrong corpus is worse than a
+tool that refuses. "It ran and produced a number" is not the same as
+"it measured the right thing" — the first is a vacuous pass.
