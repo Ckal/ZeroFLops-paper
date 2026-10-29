@@ -15,7 +15,7 @@ Author: **Christof Ckal** · Project: ZeroFLops
 | **Supervision** | Every ply of every game labelled with the **set of optimal moves** from an exact solver. |
 | **Training data** | 320,000 games → 4,462,571 per-ply labels. |
 | **Result (teacher agreement)** | 16.3 % → **59.6 %** on train, 11.9 % → **41.0 %** on a board-disjoint holdout. |
-| **Result (game strength)** | Beats random **~85–90 %**. **Loses to a 1-ply heuristic** at every point in the run. |
+| **Result (game strength)** | Beats random **85.2 %**. **Loses to the centre-column policy (90.5 %)** and to a 1-ply heuristic (wins only 37.2 %) — both measured over 600 games per arm. |
 | **The point** | Teacher-agreement and game strength are **different things**, and this repo shows it with two independent measurements. |
 | **Model size** | 32.3 MB, 8,422,496 parameters, **CPU-only** inference. |
 
@@ -27,9 +27,13 @@ Most training runs report one number. This one reports two — and they
 disagree.
 
 A model can agree with an expert teacher on ~59 % of positions, beat a
-random player ~87 % of the time, and play a recognisable, non-degenerate
+random player 85.2 % of the time, and play a recognisable, non-degenerate
 board-reading game — and **still lose** to a three-line rule that only
 checks *"can I win now?"* and *"can I block now?"*.
+
+It also loses to a policy that does nothing but play the middle column
+(90.5 % vs. the model's 85.2 % against random — a significant difference,
+Fisher exact p = 0.0024). Both losses are published below.
 
 We think that's worth publishing, so we publish the negative result as
 prominently as the positive one. Every number below traces to a command
@@ -80,7 +84,7 @@ parameters. The complete model is therefore *not* a zero-FLOP program.
 - It **reads the board.** Its picks spread across all seven columns
   (holdout: `[39, 55, 94, 175, 78, 48, 23]`), with non-zero per-column
   recall for every column. It is not a degenerate constant policy.
-- It **beats random** ~85–90 % of the time, stably.
+- It **beats random** 85.2 % of the time (n=600, 3 seeds).
 - It **agrees with the exact solver** on 59.6 % of training positions and
   41.0 % of held-out positions.
 

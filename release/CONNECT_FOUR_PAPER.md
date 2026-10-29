@@ -20,7 +20,7 @@ labelled by the set of optimal moves.
 On a 320,000-game corpus the model reaches **59.6 %** agreement with the
 solver's optimal-move labels on the training distribution and **41.0 %** on
 a board-disjoint holdout, up from 16.3 % / 11.9 % at initialisation. It
-beats a random opponent decisively (**85–90 %** win rate) and plays a
+beats a random opponent decisively (**85.2 %** win rate, n=600) and plays a
 recognisable, non-degenerate game.
 
 However, we report a **negative strength result**: across the entire
@@ -230,7 +230,7 @@ ladder against random and heuristic.
 
 - Label agreement: **16.3 % → ~59 %** (train), **11.9 % → ~41 %**
   (holdout). A large, unambiguous gain.
-- Win rate vs. random: **~85–90 %**, stable.
+- Win rate vs. random: **85.2 %** (511-88-1 of 600), stable.
 - The model demonstrably **reads the board**. Its move distribution is
   spread across all seven columns (holdout picks
   `[39, 55, 94, 175, 78, 48, 23]`), it is not a degenerate constant
@@ -249,7 +249,7 @@ ladder against random and heuristic.
 ### 5.3 The dissociation
 
 The model at step 18000 agrees with the solver's optimal move on ~59 % of
-training positions and ~41 % of held-out positions, beats random ~85–90 %
+training positions and 41.0 % of held-out positions, beats random 85.2 %
 of the time, plays a genuine board-reading game — and **still loses to a
 rule that only checks "can I win now" and "can I block now"**.
 

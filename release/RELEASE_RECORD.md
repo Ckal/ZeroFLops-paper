@@ -240,7 +240,7 @@ holdout per-ply subset, 48-game ladder vs. random and heuristic.
   corrected short-run baseline (16.3 % at step 0).
 - **Label agreement has plateaued** since roughly step 14000–18000 at
   57–60 % train / 38–42 % holdout. More steps are buying very little.
-- **The model beats random decisively** (~85–90 % win rate throughout).
+- **The model beats random decisively** (85.2 % win rate; 200-game x 3-seed matrix).
 - **The model is NET NEGATIVE against the 1-ply heuristic** for the entire
   run (14-34, 18-30, 23-25 at the best points). It never reaches parity,
   let alone superiority.
@@ -396,7 +396,7 @@ CPU-only container is sufficient; a GPU is not required for serving.
 - Attribute to **Christof Ckal**.
 - **Do not** claim the model is strong at Connect Four. It is not, and the
   ladder says so.
-- Safe claims: it reads the board; it beat random ~85–90 %; supervised
+- Safe claims: it reads the board; it beat random 85.2 %; supervised
   agreement rose 16 % → 59 %; it is a **research artifact** exposing a
   measured gap between teacher-agreement and game strength; it runs on
   CPU with a 32 MB integer-model trunk.

@@ -8,7 +8,7 @@ This plan starts from the **measured** state of the project, not from the
 original ambition. The central measurement is:
 
 > The model agrees with the exact solver on ~59 % of training positions
-> and ~41 % of held-out positions, beats random ~85–90 %, plays a genuine
+> and 41.0 % of held-out positions, beats random 85.2 %, plays a genuine
 > board-reading game — and **still loses to a 1-ply heuristic** at every
 > point in the run.
 

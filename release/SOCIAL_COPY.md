@@ -25,7 +25,7 @@
 >
 > Then I measured two things separately:
 > - how often it agrees with the teacher: **59.6%**
-> - how often it wins: it beats random ~87%... and **loses to a 1-ply
+> - how often it wins: it beats random 85.2%... and **loses to a 1-ply
 >   heuristic.**
 >
 > Teacher-agreement ≠ game strength. Here's the evidence. 🧵
@@ -91,7 +91,7 @@
 ### 1b. Shorter single post (if the thread is too long)
 
 > A neural net trained with an exact Connect Four solver as teacher:
-> 59.6% agreement with optimal moves, beats random ~87%...
+> 59.6% agreement with optimal moves, beats random 85.2%...
 > and loses to a 3-line heuristic.
 >
 > Teacher-agreement ≠ game strength. Full evidence, code and model:
@@ -170,7 +170,7 @@ the first paragraph, not buried. Every number links to the release record.
 >
 > • Agreement with the exact solver: 16.3% → 59.6% (train), 11.9% → 41.0%
 >   (board-disjoint holdout)
-> • Game strength: beats a random player ~87% of the time... and stays
+> • Game strength: beats a random player 85.2% of the time... and stays
 >   net-negative against a 1-ply heuristic at every point in the run
 >
 > The model reads the board. It picks all seven columns. It just isn't
@@ -206,7 +206,7 @@ muted).
 | 0:06 | The board, empty. Caption: *Every ply labelled with the set of optimal moves. 320,000 games.* |
 | 0:14 | The model moves. The 7-column next-move distribution appears and **updates visibly** each ply. This is the hero shot. |
 | 0:30 | Caption: *59.6% agreement with the exact solver. Holdout: 41.0%.* |
-| 0:38 | Split screen vs. random: wins. Caption: *Beats random ~87%.* |
+| 0:38 | Split screen vs. random: wins. Caption: *Beats random 85.2%.* |
 | 0:46 | Split screen vs. the 3-line heuristic: loses. Caption: *Loses to a 1-ply heuristic. At every step of the run.* |
 | 1:00 | End card: repo / model / play links. Caption: *Teacher-agreement ≠ game strength.* |
 

@@ -97,14 +97,14 @@ corpus.
 | Teacher agreement, training corpus | **59.55 %** |
 | Teacher agreement, board-disjoint holdout | **41.0 %** |
 | Teacher agreement, holdout per-ply subset (n=512) | 41.8 % |
-| Win rate vs. random (48-game ladder) | ~85–90 % |
+| Win rate vs. random (200-game x 3-seed matrix, n=600) | 85.2 % (511-88-1) |
 | Win rate vs. 1-ply heuristic | **net-negative** |
 | Exact-solver holdout coverage | 560 / 1,500 = **37.3 %** |
 
 ### The honest result
 
 The model **agrees with the exact solver on ~59 % of training positions**
-and **~41 % of held-out positions**, beats a random opponent ~85–90 % of
+and **41.0 % of held-out positions**, beats a random opponent 85.2 % of
 the time, and plays a genuine board-reading game — its picks spread across
 all seven columns with non-zero per-column recall for every column.
 
