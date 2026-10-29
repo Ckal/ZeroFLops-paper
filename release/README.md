@@ -17,6 +17,11 @@ Author: **Christof Ckal** · Project: ZeroFLops
 > (the Space is static and frames the live server; the server allows that
 > one origin explicitly — never a wildcard).
 
+![The game running against the GF(256) model](c4_001-006.gif)
+
+*A recorded game against the released checkpoint (`best_hard`, step 18,000).
+Gold is the human, blue is the model.*
+
 ---
 
 ## TL;DR

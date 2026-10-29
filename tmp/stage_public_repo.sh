@@ -62,6 +62,9 @@ echo "-- release documents"
 for f in README.md RELEASE_RECORD.md CONNECT_FOUR_PAPER.md GF256_LANGUAGE_MODEL_PAPER.md FOLLOWUP_PLAN.md MODEL_CARD.md SOCIAL_COPY.md LICENSE; do
   copy "release/$f" "$f"
 done
+# The demo recording the README shows. It is a screen capture of the
+# game UI -- no private data, no corpus, just the public interface.
+copy "release/c4_001-006.gif" "c4_001-006.gif"
 # The release documents also live under release/ in the source tree, so a
 # reader who finds the repo can see they came from a release package.
 mkdir -p "$TARGET/release"
