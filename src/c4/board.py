@@ -65,8 +65,21 @@ class Board:
     # -------- queries --------
 
     def is_full(self) -> bool:
-        # top row is index ROWS-1; bit ROWS*COLS-1 means that cell is filled.
-        return bool((self.mask >> (ROWS * COLS - 1)) & 1)
+        """True when every one of the ROWS*COLS cells is occupied.
+
+        BUG (found via a live UI game): this used to check ONLY the single
+        bit ROWS*COLS-1 -- the top cell of the last column. A game in which
+        both players kept stacking column 6 (internal c6, the right-hand
+        edge) filled that one cell after 6 plies and the board was declared
+        a DRAW with 36 of 42 cells still empty. Every consumer of
+        `is_full()` (duel.py, play.py, corpus generation, the exact
+        solver's terminal test) inherited that early draw.
+
+        The correct test is "no legal action remains": every column is
+        full. `valid_actions()` already encodes exactly that, so use it
+        rather than re-deriving a mask comparison.
+        """
+        return not self.valid_actions()
 
     def cell(self, row: int, col: int) -> int:
         idx = row * COLS + col
@@ -143,6 +156,45 @@ class Board:
         if self.is_full():
             return Outcome.DRAW
         return Outcome.ONGOING
+
+
+def is_terminal(board: "Board") -> bool:
+    """True when the game is over: somebody won, or no legal action remains.
+
+    THE canonical terminal predicate for the whole project. Every play
+    loop, duel harness, corpus generator and trainer should call this (or
+    `board.outcome()`), never a hand-rolled fullness test.
+
+    Why this exists: `Board.is_full()` once checked a SINGLE mask bit
+    instead of the whole board, so a game that stacked one edge column was
+    declared a DRAW with 36 of 42 cells empty. The bug was invisible in
+    the code and corrupted the corpus, the duels and the live UI.
+    Centralising the predicate here makes the invariant explicit and gives
+    new consumers one obvious correct call.
+    `board.outcome() != Outcome.ONGOING` is equivalent; this spelling is
+    preferred at call sites that only need a boolean.
+    """
+    return board.is_win() != 0 or not board.valid_actions()
+
+
+def assert_terminal_consistent(board: "Board") -> None:
+    """Assert the board's own terminal flags agree with the canonical rule.
+
+    A cheap self-check for test harnesses and corpus builders: it catches
+    the class of bug where `is_full()` and `outcome()` disagree, or where
+    a full board still claims to be playable.
+    """
+    full = not board.valid_actions()
+    assert board.is_full() == full, (
+        f"is_full()={board.is_full()} but legal actions remain: "
+        f"{board.valid_actions()}")
+    if full:
+        assert board.is_win() == 0 or board.outcome() in (
+            Outcome.WIN_P1, Outcome.WIN_P2), (
+            "full board with a win should report the win, not a draw")
+    else:
+        assert board.outcome() != Outcome.DRAW, (
+            "outcome says DRAW but the board still has legal actions")
 
 
 def play_sequence(moves: list[int]) -> tuple[Board, int]:

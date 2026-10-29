@@ -18,3 +18,31 @@ runs/
 
 # Hermes plans from other sessions
 .hermes/plans/*connect-four*
+
+# ---- scratch / probe artefacts -----------------------------------------
+# One-off diagnostic scripts written at the repo root or in tmp/ while
+# chasing individual bugs. They document HOW a bug was found, which the
+# curated regression tests in tmp/ already capture as assertions.
+# Keep the curated tests; drop the throwaway probes.
+_*.py
+tmp/_*.py
+tmp/probe_*.py
+tmp/debug_*.py
+tmp/audit_*.py
+tmp/verify_*.py
+tmp/eval_*.py
+tmp/dump_*.py
+tmp/print_*.py
+tmp/scan_*.py
+tmp/plot_*.py
+tmp/*.log
+tmp/*.json
+tmp/*.txt
+tmp/*.npz
+tmp/*.pt
+
+# Large data artifacts and per-run logs
+*.npz
+V1*.TXT
+V*_TRAIN_LOG.TXT
+PLAN_*.md

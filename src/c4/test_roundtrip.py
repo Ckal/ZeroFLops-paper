@@ -12,8 +12,8 @@ from .board import (
     Board, Outcome, play_sequence, board_from_cells, set_last_and_turn,
 )
 from .transcript import (
-    GRID_LEN, decode_board, encode_board_bytes, encode_transcript,
-    split_transcript,
+    PLY_LEN, MAX_LINE, MOVE_OFFSET, HEADER_LEN, COL_SLICE,
+    decode_game, decode_state, encode_game, encode_state, plies_of,
 )
 from . import ROWS, COLS, P1, P2, EMPTY
 
@@ -121,7 +121,13 @@ def main() -> int:
         b.apply_move(c)
     print(f"[5] exhaustive-ish fill outcome = {b.outcome()} (0=ongoing 3=draw)")
 
-    # --- 4. encode/decode roundtrip over random finished games
+    # --- 4. encode/decode roundtrip over random finished games.
+    # Transcript format: 10 bytes per ply = [h0..h6][last][turn][move],
+    # each ply newline-terminated. Only the `move` slot is a prediction
+    # target, so the round-trip must recover the move list exactly and
+    # every move byte must land in COL_SLICE (0x41..0x47) for the logit
+    # slice to be valid.
+    longest = 0
     for g in range(200):
         b = Board()
         moves = []
@@ -129,24 +135,56 @@ def main() -> int:
             c = rng.choice(b.valid_actions())
             moves.append(c)
             b.apply_move(c)
-        line = encode_transcript(b, moves)
-        assert len(line) == GRID_LEN + len(moves) + 1, "line length wrong"
-        assert len(line) <= 85, f"line too long: {len(line)}"
-        grid, decoded_moves = split_transcript(line)
-        assert decoded_moves == moves, "move list mismatch"
-        # the encoded grid must equal a fresh encode of the board
-        assert grid == encode_board_bytes(b), "grid mismatch"
-        # decode -> masks/heights must match the live board
-        d = decode_board(grid)
-        assert d.mask == b.mask, f"mask mismatch: {d.mask:#x} vs {b.mask:#x}"
-        assert d.p1 == b.p1 and d.p2 == b.p2, "player mask mismatch"
-        assert d.heights == b.heights, f"heights mismatch: {d.heights} vs {b.heights}"
-        assert d.valid_actions() == b.valid_actions(), "valid_actions mismatch"
-        # winner must survive: re-add the final move pattern check
+        line = encode_game(moves)
+        longest = max(longest, len(line))
+
+        # one 10-byte record + one newline per ply
+        assert len(line) == PLY_LEN * len(moves) + len(moves), \
+            f"line length {len(line)} != {PLY_LEN}*{len(moves)}+{len(moves)}"
+        assert len(line) <= MAX_LINE, f"line too long: {len(line)}"
+        assert plies_of(line) == len(moves), "ply count mismatch"
+
+        # the move list must survive the codec bit for bit
+        assert decode_game(line) == moves, "move list mismatch"
+
+        # every move byte must be a real column byte
+        flat = line.replace(b"\n", b"")
+        for i, m in enumerate(moves):
+            byte = flat[i * PLY_LEN + MOVE_OFFSET]
+            assert COL_SLICE.start <= byte < COL_SLICE.stop, \
+                f"ply {i}: byte {byte:#x} outside COL_SLICE"
+            assert byte - COL_SLICE.start == m, "move byte does not decode to col"
+
+        # the first ply's header is the empty board with last=NO_LAST
+        h0 = flat[:HEADER_LEN]
+        heights, last, turn = decode_state(h0)
+        assert heights == [0] * COLS, f"ply 0 heights {heights}"
+        assert last is None, f"ply 0 last should be None, got {last}"
+        assert turn == P1, f"ply 0 turn should be P1, got {turn}"
+
+        # the live board and the replayed board must agree on the endgame
+        b2, o2 = play_sequence(moves)
+        assert o2 == b.outcome(), "outcome mismatch after replay"
+        assert b2.mask == b.mask and b2.heights == b.heights, "board mismatch"
         if b.outcome() in (Outcome.WIN_P1, Outcome.WIN_P2):
             player = P1 if b.outcome() == Outcome.WIN_P1 else P2
             assert brute_force_win(b, player), "claimed win is not a win"
-    print("[6] encode/decode roundtrip: 200 finished games OK (mask+heights+valid)")
+    print(f"[6] encode/decode roundtrip: 200 finished games OK "
+          f"(10B/ply, longest {longest}B)")
+    # a full 42-ply game must fit the model's context window. Round-robin
+    # 0,1,2,...,6 repeated fills every column exactly 6 deep. It may well
+    # produce a winner partway through -- irrelevant, we only care that
+    # the encoded length fits and the codec round-trips all 42 plies.
+    counts = [0] * COLS
+    full_moves = [ply % COLS for ply in range(42)]
+    for c in full_moves:
+        counts[c] += 1
+    assert all(n == ROWS for n in counts), counts
+    full_line = encode_game(full_moves)
+    assert len(full_line) == MAX_LINE, f"42-ply line is {len(full_line)}B"
+    assert len(full_line) <= 512, f"{len(full_line)}B exceeds the context window"
+    assert decode_game(full_line) == full_moves, "42-ply decode mismatch"
+    print(f"[7] 42-ply transcript = {len(full_line)}B, fits the 512B context")
 
     # --- 5. play_sequence agrees with incremental play
     for g in range(100):
@@ -175,6 +213,100 @@ def main() -> int:
     print(f"[8] random play 2000 games: P1={wins[1]} P2={wins[2]} draw={wins[3]}")
     print(f"    mean filled cells: {sum(lens)/len(lens):.1f}/42 "
           f"(min {min(lens)}, max {max(lens)})")
+
+    # --- 7. is_full() must mean "every cell is occupied", not "one bit is set"
+    #
+    # BUG (found via a live UI game): is_full() used to check ONLY the single
+    # bit ROWS*COLS-1 -- the top cell of the LAST column. A game in which
+    # both players kept stacking the right-hand column filled that one cell
+    # after 6 plies and the board was declared a DRAW with 36 of 42 cells
+    # still empty. Every consumer of is_full() inherited the early draw:
+    # the corpus generator, the duel harness, play.py, train.py.
+    #
+    # The regression test pins the correct semantics.
+    def _no_four_board(cols: list[int]) -> Board:
+        """A position over `cols` with no four for either player.
+
+        Uses a cell pattern verified against the exact solver's has_four(),
+        so the DRAW branch of outcome() is genuinely exercised. A naive
+        checkerboard or column-alternating pattern creates a DIAGONAL four,
+        which makes the test fail for the wrong reason.
+        """
+        from .exact_solver import has_four
+        grid = ["BYBYBBY", "YYBYYBB", "BBYBYBY",
+                "YYBBYYB", "BYBYBYB", "YYYBYBB"]
+        p1, p2 = [], []
+        for r in range(ROWS):
+            for c in range(COLS):
+                if c not in cols:
+                    continue
+                (p1 if grid[r][c] == "Y" else p2).append((r, c))
+        m1 = sum(1 << (r * COLS + c) for r, c in p1)
+        m2 = sum(1 << (r * COLS + c) for r, c in p2)
+        assert not has_four(m1) and not has_four(m2), "pattern has a four"
+        return board_from_cells(p1, p2, last=(ROWS - 1, max(cols)))
+
+    # (a) the user's exact scenario: both sides stack the right-hand column
+    b = Board()
+    for _ in range(ROWS):
+        b.apply_move(COLS - 1)
+    assert b.outcome() == Outcome.ONGOING, (
+        f"stack of {ROWS} in one column ended the game: {b.outcome()}")
+    assert not b.is_full(), "is_full() true with 36 cells empty"
+    assert len(b.valid_actions()) == COLS - 1, b.valid_actions()
+
+    # (b) one column open -> not full, ongoing, no win
+    b = _no_four_board(list(range(COLS - 1)))
+    assert not b.is_full()
+    assert b.outcome() == Outcome.ONGOING, b.outcome()
+    assert b.is_win() == 0
+
+    # (c) every column full -> is_full(), DRAW, and genuinely no four
+    b = _no_four_board(list(range(COLS)))
+    assert b.is_full()
+    assert b.outcome() == Outcome.DRAW, b.outcome()
+    assert b.is_win() == 0
+    assert sum(1 for r in range(ROWS) for c in range(COLS)
+               if b.cell(r, c) != EMPTY) == ROWS * COLS
+
+    # (d) the old one-bit test would have fired early on real boards
+    def _old_is_full(mask: int) -> bool:
+        return bool((mask >> (ROWS * COLS - 1)) & 1)
+
+    early = 0
+    for _ in range(300):
+        bb = Board()
+        while bb.outcome() == Outcome.ONGOING:
+            bb.apply_move(rng.choice(bb.valid_actions()))
+            if _old_is_full(bb.mask) and not bb.is_win():
+                early += 1
+                break
+    assert early > 0, "the old one-bit test never fired -- bug shape changed"
+
+    # (e) randomised + exhaustive: is_full() == (no legal actions)
+    for _ in range(500):
+        bb = Board()
+        for _ in range(rng.randint(0, ROWS * COLS)):
+            legal = bb.valid_actions()
+            if not legal:
+                break
+            bb.apply_move(rng.choice(legal))
+        assert bb.is_full() == (len(bb.valid_actions()) == 0), "is_full mismatch"
+    for c in range(COLS):
+        for n in range(ROWS + 1):
+            bb = Board()
+            ok = True
+            for _ in range(n):
+                if c not in bb.valid_actions():
+                    ok = False
+                    break
+                bb.apply_move(c)
+            if not ok:
+                continue
+            assert bb.is_full() == (len(bb.valid_actions()) == 0), (
+                f"single-column stack c{c} x{n}: is_full wrong")
+    print("[9] is_full() = no legal actions: user scenario, full board, "
+          "300 random, all single-column stacks OK")
 
     if fails:
         print(f"\n{fails} FAILURES")

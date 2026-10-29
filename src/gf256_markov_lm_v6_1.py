@@ -143,9 +143,26 @@ def row_entropy(p):
 # GF Layer
 # ────────────────────────────────────────────────────────────────────────────
 class GFLayer(nn.Module):
-    def __init__(self, d, fan_in, lags, coef_set, gen):
+    def __init__(self, d, fan_in, lags, coef_set, gen, table_bias=1.0):
         super().__init__()
         self.d, self.fan_in, self.lags = d, fan_in, lags
+        # `table_bias` scales the identity/one-hot init bonus on the table
+        # logits (1.0 = historical behaviour, 0.0 = unbiased).
+        #
+        # WHY THIS EXISTS (2026-10-26): the bonus creates a top1-top2 margin
+        # of ~7.7 logits. Adam moves a parameter by at most `lr` per step,
+        # so a run of N steps can move it by at most lr*N -- 1.8 logits at
+        # lr=0.0006 / 3000 steps. The argmax therefore CANNOT flip, the
+        # exported integer table stays frozen, and the hard export is
+        # board-blind no matter how the STE schedule is set. Scaling the
+        # bonus down makes the argmax reachable (and lets the model LEARN
+        # the identity solution instead of being handed it).
+        #
+        # RNG ORDER IS UNCHANGED: every randn/randperm draw below still
+        # happens, only the `+=` bonus is scaled. That keeps `coef_set`
+        # (drawn from the same generator) byte-identical to the historical
+        # draw, so checkpoints stay loadable by the existing loader.
+        self.table_bias = float(table_bias)
 
         ch = torch.randint(0, d, (d, fan_in), generator=gen)
         lg = torch.randint(0, len(lags), (d, fan_in), generator=gen)
@@ -161,13 +178,13 @@ class GFLayer(nn.Module):
         with torch.no_grad():
             one_idx = coef_set.index(1)
             zero_idx = coef_set.index(0)
-            self.coef_logits[:, 0, one_idx] += 6.0
+            self.coef_logits[:, 0, one_idx] += 6.0 * self.table_bias
             if fan_in > 1:
-                self.coef_logits[:, 1:, zero_idx] += 4.0
+                self.coef_logits[:, 1:, zero_idx] += 4.0 * self.table_bias
 
         sbox = 0.1 * torch.randn(d, 256, 256, generator=gen)
         ar256 = torch.arange(256)
-        sbox[torch.arange(d)[:, None], ar256[None, :], ar256[None, :]] += 8.0
+        sbox[torch.arange(d)[:, None], ar256[None, :], ar256[None, :]] += 8.0 * self.table_bias
         self.sbox_logits = nn.Parameter(sbox)
         self.ste = False
 
@@ -207,11 +224,18 @@ class GFMarkovLM(nn.Module):
 
     def __init__(self, d=32, layers=3, fan_in=4,
                  lags=(0, 1, 2, 4, 8, 16, 32, 64), n_coef=8,
-                 bigram_logp=None, seed=0):
+                 bigram_logp=None, seed=0, table_bias=1.0):
         super().__init__()
         gen = torch.Generator().manual_seed(seed)
         self.d = d
         self.lags = list(lags)
+        # See GFLayer.__init__ for why `table_bias` exists: the identity
+        # bonus creates a ~7.7-logit margin that Adam cannot cross within
+        # a realistic step budget, freezing the exported integer tables.
+        # 1.0 = historical behaviour, 0.0 = unbiased (identity must be
+        # learned). The RNG draw order is unchanged, so `coef_set` is
+        # byte-identical to the historical draw.
+        self.table_bias = float(table_bias)
 
         coef_set = [0, 1]
         while len(coef_set) < n_coef:
@@ -229,13 +253,14 @@ class GFMarkovLM(nn.Module):
 
         emb = 0.1 * torch.randn(256, d, 256, generator=gen)
         ar256 = torch.arange(256)
-        emb[ar256, 0, ar256] += 10.0
+        emb[ar256, 0, ar256] += 10.0 * self.table_bias
         for j in range(1, d):
-            emb[ar256, j, torch.randperm(256, generator=gen)] += 8.0
+            emb[ar256, j, torch.randperm(256, generator=gen)] += 8.0 * self.table_bias
         self.emb_logits = nn.Parameter(emb)
 
         self.layers = nn.ModuleList(
-            [GFLayer(d, fan_in, self.lags, coef_set, gen) for _ in range(layers)])
+            [GFLayer(d, fan_in, self.lags, coef_set, gen,
+                     table_bias=self.table_bias) for _ in range(layers)])
 
         self.readout = nn.ParameterList(
             [nn.Parameter(torch.zeros(d, 256, 256)) for _ in range(layers + 1)])
