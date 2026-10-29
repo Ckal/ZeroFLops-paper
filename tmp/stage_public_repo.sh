@@ -59,14 +59,19 @@ copy() {  # copy <src-relative-to-root> <dst-relative-to-target>
 }
 
 echo "-- release documents"
-for f in README.md RELEASE_RECORD.md CONNECT_FOUR_PAPER.md FOLLOWUP_PLAN.md MODEL_CARD.md SOCIAL_COPY.md LICENSE; do
+for f in README.md RELEASE_RECORD.md CONNECT_FOUR_PAPER.md GF256_LANGUAGE_MODEL_PAPER.md FOLLOWUP_PLAN.md MODEL_CARD.md SOCIAL_COPY.md LICENSE; do
   copy "release/$f" "$f"
 done
 # The release documents also live under release/ in the source tree, so a
 # reader who finds the repo can see they came from a release package.
-mkdir -p release
-cp "$ROOT/release/." "$TARGET/release/" 2>/dev/null || true
+mkdir -p "$TARGET/release"
+cp -R "$ROOT/release/." "$TARGET/release/" 2>/dev/null || true
 find "$TARGET/release" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+# The mirror must actually contain the documents -- a silent cp failure
+# would ship an empty release/ dir.
+for f in README.md RELEASE_RECORD.md CONNECT_FOUR_PAPER.md GF256_LANGUAGE_MODEL_PAPER.md MODEL_CARD.md SOCIAL_COPY.md; do
+  [ -f "$TARGET/release/$f" ] || echo "   (WARNING: release/$f missing from the mirror)"
+done
 
 echo "-- verification scripts"
 # The README documents the isolation gate as a published artifact, so it
@@ -113,6 +118,8 @@ for f in \
   tmp/test_live_parity_v4.py \
   tmp/test_live_parity_v5.py \
   tmp/test_live_ui_fd_a.py \
+  tmp/test_ui_api.py \
+  tmp/test_ui_terminal.py \
   tmp/run_regression_sweep.sh ; do
   [ -f "$ROOT/$f" ] && copy "$f" "$f" || echo "   (skip missing $f)"
 done
