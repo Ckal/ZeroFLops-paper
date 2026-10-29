@@ -3513,3 +3513,47 @@ That number was measured on a crowded machine. The real figure is
 **12.3 hours**. If you had quoted the 18-hour number, you would have
 waited five hours longer than necessary for no reason.
 
+
+## 9.19 The disk was filling up -- and it was not the training (29 October 2026)
+
+Partway through setting up the long run, the computer reported only
+**4.3 GB free** out of 931 GB. That looks alarming: the run itself was
+using **604 MB**, so where did the rest go?
+
+**It was my own tests, again.** Two of the resume tests create a full
+training run to check that resuming works. They *clean up before they
+start* -- but never after they finish. So every successful test run left
+a spare copy of the training corpus, a spare copy of the labels and a
+full set of checkpoint files sitting on disk. About **2.9 GB** of it.
+
+The fix is small: clean up after finishing too, not just before
+starting. Both tests now do, and I confirmed they still pass
+(19/19 and 12/12, with the bit-exact resume check still exact) and leave
+**nothing** behind.
+
+That freed **2.9 GB** -- the machine went from 4.3 GB free to 7.2 GB
+free, without deleting a single historical experiment, corpus or model.
+
+**The pattern worth noticing.** Two separate problems in this stretch
+had the same shape:
+
+- the watcher test **left processes running** after it finished;
+- the resume tests **left files behind** after they finished.
+
+Both are "I only cleaned up on the way in, not on the way out." Both
+were invisible until something else needed the same resource -- the CPU
+for the first, the disk for the second. The lesson is not "clean up
+more carefully." It is **clean up on the success path too**, because the
+success path is the one that runs most often and nobody looks at it.
+
+**Where the run stands:**
+
+```text
+step 4000 | LABEL 45.3%  | HOLDOUT 28.8%  | H-LABEL 28.1%
+```
+
+The model is tracking the predicted learning curve exactly
+(step 2000 predicted 40.23%, got 40.2%; step 4000 predicted ~45.3%,
+got 45.3%), and the playable page has already updated itself to the
+step-4000 model on its own.
+

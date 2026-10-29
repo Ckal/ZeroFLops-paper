@@ -1961,3 +1961,54 @@ on trouble or completion. Its process-liveness check uses psutil, not
   reclaims a stale lock automatically when the recorded PID is dead.
 - If the UI stops answering on 7860, the trainer is probably still fine --
   check the trainer first (psutil), then restart the watcher.
+
+### 5v. Disk pressure during the V24 launch — and its real cause
+
+Mid-launch the volume showed **4.3 GB free** on a 931 GB disk (100 %
+used flag). Two separate causes, only one of which was the training run.
+
+**Cause 1 — the training run itself: not the problem.**
+`runs/_probe/v24/` was **604 MB** at step 2000 and grows to about
+**1 GB** total under the default `--keep-last 3` retention (3 float
+snapshots ~203 MB each + 3 hard exports ~34 MB each + the promoted pair).
+That fits comfortably.
+
+**Cause 2 — the regression suite's own scratch: the real problem.**
+
+```text
+runs/_probe/_resume_equiv        1,2 GB
+runs/_probe/_resume_state_test     830 MB
+runs/_probe/_resume_state_test2    506 MB
+runs/_probe/_resume_state_test3     53 MB
+runs/_probe/_gate_smoke            289 MB
+runs/_probe/_eo32_50                53 MB
+                              --------
+                                ~2,9 GB
+```
+
+Both resume tests did `shutil.rmtree(SCRATCH)` **at the start** of a run
+but never at the end. So a *successful* run left a corpus copy, a
+sidecar copy and full optimiser-state checkpoints behind — every time.
+The isolated rerun in the launch window alone created ~1.9 GB of it.
+
+**Fixed:** both tests now also remove their scratch in a `finally`
+block. Verified:
+
+```text
+test_resume_state.py        19 PASS, 0 FAIL, 0 scratch dirs left
+test_resume_equivalence.py  12 PASS, 0 FAIL, 0 scratch dirs left
+max |Adam moment difference| = 0.000e+00   (still bit-exact)
+```
+
+**Reclaimed 4.3 GB -> 7.2 GB free** without touching a single
+historical run, corpus or promoted checkpoint.
+
+**Lesson:** a test that only cleans up on entry leaks on success. This
+is the mirror image of the watcher leak (§5t.8) — there the process
+survived, here the files did. Both are "cleanup on the happy path only"
+bugs, and both only showed up because something else was using the same
+resource.
+
+**Standing rule while V24 runs:** the volume has ~7 GB free and the run
+needs ~0.4 GB more. Do not run the full regression sweep repeatedly
+during the run — each sweep is fine, but do not leave scratch behind.

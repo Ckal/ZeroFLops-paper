@@ -7873,3 +7873,60 @@ tracking the corrected curve.
 - No regression sweep during the run (same GPU/CPU).
 - Do not clear `runs/_probe/.v24.lock` with `rm -rf`.
 - If the UI stops answering on 7860, check the trainer first.
+
+## Appendix D32 — disk-pressure triage during the V24 launch (2026-10-29)
+
+### Symptom
+
+Mid-launch the volume showed **4.3 GB free** on a 931 GB disk.
+
+### Triage
+
+| Component | Size | Verdict |
+|---|---|---|
+| `runs/_probe/v24/` (the live run) | 604 MB at step 2000 | fine — ~1 GB total at `--keep-last 3` |
+| `runs/_probe/_resume_equiv` | 1.2 GB | test scratch — **leaked** |
+| `runs/_probe/_resume_state_test` | 830 MB | test scratch — **leaked** |
+| `runs/_probe/_resume_state_test2` | 506 MB | test scratch — **leaked** |
+| `runs/_probe/_resume_state_test3` | 53 MB | test scratch — **leaked** |
+| `runs/_probe/_gate_smoke` | 289 MB | test scratch — stale |
+| `runs/_probe/_eo32_50` | 53 MB | test scratch — stale |
+| **total leaked** | **~2.9 GB** | |
+
+### Root cause
+
+`tmp/test_resume_state.py` and `tmp/test_resume_equivalence.py` did
+`shutil.rmtree(SCRATCH)` **at the start** of a run but never at the end.
+A *successful* run therefore left a corpus copy, a sidecar copy and
+full optimiser-state checkpoints on disk. The isolated rerun performed in
+the launch window alone created ~1.9 GB.
+
+This is the file-space twin of the watcher process leak (§5t.8): cleanup
+on the unhappy path only. The success path runs most often and nobody
+inspects it.
+
+### Fix
+
+Both tests now remove their scratch in a `finally` block.
+
+```text
+test_resume_state.py        19 PASS, 0 FAIL, 0 scratch dirs left
+test_resume_equivalence.py  12 PASS, 0 FAIL, 0 scratch dirs left
+max |Adam moment difference| = 0.000e+00   (still bit-exact)
+```
+
+**Reclaimed 4.3 GB -> 7.2 GB free.** No historical run, corpus or
+promoted checkpoint was touched.
+
+### Note on the 100 % used flag
+
+`df` reports `100%` on the Use% column because Windows rounds against
+the whole volume, but the free figure (~7 GB) is the number that
+matters. Do not treat the 100 % flag as "out of disk".
+
+### Standing rule
+
+The run needs ~0.4 GB more than it has already used. Do not leave
+scratch behind while it is live, and do not run the full sweep
+repeatedly.
+
