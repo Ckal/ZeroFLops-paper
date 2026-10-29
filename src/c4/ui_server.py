@@ -61,6 +61,14 @@ from src.c4 import fmt  # noqa: E402
 from src.c4.agent import Agent, hard_to_cpu, prompt_tokens  # noqa: E402
 from src.c4.board import Board, Outcome  # noqa: E402
 from src.c4.patterns import pattern_report  # noqa: E402
+from src.c4.sessions import (  # noqa: E402
+    SessionStore,
+    clear_session_cookie,
+    new_session_id,
+    parse_cookies,
+    session_cookie,
+    valid_session_id,
+)
 from src.gf256_markov_lm_v6 import GFMarkovLM as GFMarkovLM_V6  # noqa: E402
 from src.gf256_markov_lm import GFMarkovLM as GFMarkovLM_V7  # noqa: E402
 
@@ -636,13 +644,18 @@ def _checkpoint_step(ckpt_path: Path) -> int | None:
 
 
 def _reload_agent(reason: str = "manual") -> dict[str, Any]:
-    """Re-read the watched checkpoint and swap it into the live game.
+    """Re-read the watched checkpoint and swap it into the live game(s).
 
     Returns a status dict for the HTTP layer. The in-progress board and
     move history are PRESERVED: the human keeps playing the same game,
     but the model behind it is the newest checkpoint.
+
+    With per-session games there is no single `_GAME` to swap, so the
+    new agent is pushed into EVERY live session. A visitor mid-game
+    keeps their board and starts playing against the improved model.
     """
-    global _GAME, _MODEL_MTIME, _MODEL_SIZE, _MODEL_SHA, _MODEL_STEP
+    global _MODEL_MTIME, _MODEL_SIZE, _MODEL_SHA, _MODEL_STEP
+    global _CURRENT_AGENT
     with _RELOAD_LOCK:
         if _MODEL_PATH is None:
             return {"ok": False, "error": "no checkpoint is being watched"}
@@ -659,14 +672,29 @@ def _reload_agent(reason: str = "manual") -> dict[str, Any]:
             # previous (working) model in place.
             return {"ok": False, "error": f"{type(e).__name__}: {e}"}
 
-        if _GAME is None:
-            _GAME = Game(agent, model_name=_MODEL_NAME)
-        else:
-            # Swap the model only; keep board/moves/turn so the game
-            # continues seamlessly.
+        n_swapped = 0
+        # Publish the new agent BEFORE swapping the sessions, so a
+        # session created concurrently picks up the new model rather
+        # than the old one.
+        _CURRENT_AGENT = agent
+        if _SESSIONS is not None:
+            for g in _SESSIONS.all_games():
+                # Swap the model only; keep board/moves/turn so the game
+                # continues seamlessly.
+                try:
+                    with g.lock:
+                        g.agent = agent
+                        g.model_name = _MODEL_NAME
+                    n_swapped += 1
+                except Exception:
+                    # One broken session must not abort the swap for the
+                    # others.
+                    continue
+        if _GAME is not None:
             with _GAME.lock:
                 _GAME.agent = agent
                 _GAME.model_name = _MODEL_NAME
+            n_swapped += 1
         _MODEL_MTIME = mtime
         _MODEL_SIZE = size
         _MODEL_SHA = _sha256(ckpt)
@@ -679,6 +707,7 @@ def _reload_agent(reason: str = "manual") -> dict[str, Any]:
             "mtime": mtime,
             "size": size,
             "sha256": _MODEL_SHA[:16],
+            "sessions_swapped": n_swapped,
         }
 
 
@@ -704,6 +733,43 @@ def _watched_checkpoint_changed() -> bool:
 _GAME: Game | None = None
 _HTML_PATH: Path = HERE / "ui.html"
 
+# ------------------------------------------------------------- sessions
+# PUBLIC DEPLOYMENT REQUIREMENT
+# ---------------------------
+# The original server kept ONE game in the module-level `_GAME` global.
+# Every visitor shared one board: a move by one person moved everyone
+# else's game, and the board state leaked across visitors. That is fine
+# for a single user on a laptop and completely wrong for a public URL.
+#
+# The fix is per-visitor state:
+#   * each visitor gets an opaque session id in an HttpOnly cookie;
+#   * each session id maps to its OWN Game instance;
+#   * the MODEL stays shared (it is read-only during inference), so one
+#     copy of the 32 MB checkpoint serves every visitor.
+#
+# `_SESSIONS` is the store. It is created in `main()` once the agent is
+# loaded, because the factory needs the agent.
+_SESSIONS: SessionStore | None = None
+# Set by main(): when True the session cookie carries the `Secure`
+# attribute, because the site is then served over HTTPS.
+_COOKIE_SECURE = False
+# Set by main(): when True, visitors are rate limited per session.
+_RATE_LIMIT = True
+# Set by main(): a background sweeper drops idle sessions.
+_SESSION_SWEEP_INTERVAL_S = 60.0
+# Set by main(): when True, the operational routes (/modelinfo, /reload)
+# are reachable. They expose the checkpoint path and allow swapping the
+# model, so they are LOCAL-ONLY by default and must be turned off for a
+# public deployment.
+_ALLOW_ADMIN = True
+# The agent the server is currently serving. A hot reload replaces it.
+# The session factory reads THIS global (not a closure over the startup
+# agent) so a session created after a reload plays against the new
+# checkpoint.
+_CURRENT_AGENT: Any = None
+# Idle lifetime of a session, in seconds.
+DEFAULT_SESSION_TTL_S = 2 * 3600
+
 
 class Handler(BaseHTTPRequestHandler):
     # quiet the default access log; the model's load time matters and stdout
@@ -711,12 +777,75 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):  # noqa: A003 - stdlib override
         sys.stderr.write("ui_server: " + (format % args) + "\n")
 
-    def _send_json(self, code: int, payload: dict[str, Any]) -> None:
+    # ------------------------------------------------------------- session
+    def _session(self, *, create: bool = True):
+        """Resolve this request's session, creating one if needed.
+
+        Returns ``(sid, game, is_new)``. `game` is None only when the
+        session store is unavailable (the agent failed to load).
+
+        The session id comes from the `tg_sid` cookie. A cookie that is
+        absent, malformed, or points at an expired session yields a NEW
+        session -- never an error, and never a shared fallback game.
+        """
+        if _SESSIONS is None:
+            return None, None, False
+        cookies = parse_cookies(self.headers.get("Cookie"))
+        sid = cookies.get("tg_sid")
+        if sid is not None and not valid_session_id(sid):
+            # A malformed id is refused outright rather than repaired:
+            # silently repairing it would let two different malformed
+            # ids collapse onto one session.
+            sid = None
+        game = _SESSIONS.get(sid) if sid else None
+        if game is not None:
+            return sid, game, False
+        if not create:
+            return sid, None, False
+        new_sid, game = _SESSIONS.create(None)
+        # Remember it so `_send_json` can emit the Set-Cookie header.
+        self._new_session_sid = new_sid
+        return new_sid, game, True
+
+    def _rate_limited(self) -> bool:
+        """True when this request should be rejected as over budget."""
+        if not _RATE_LIMIT or _SESSIONS is None:
+            return False
+        cookies = parse_cookies(self.headers.get("Cookie"))
+        sid = cookies.get("tg_sid")
+        if sid is not None and not valid_session_id(sid):
+            sid = None
+        return not _SESSIONS.allow(sid)
+
+    def _send_json(self, code: int, payload: dict[str, Any],
+                   extra_headers: list[tuple[str, str]] | None = None) -> None:
         body = json.dumps(payload).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        # Security headers for a PUBLIC deployment. The UI is entirely
+        # self-hosted (no external scripts, no external fonts, no images
+        # from other origins), so a strict CSP costs nothing and blocks
+        # the classic injection paths.
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'none'; script-src 'unsafe-inline'; "
+            "style-src 'unsafe-inline'; connect-src 'self'; "
+            "img-src 'self' data:; base-uri 'none'; form-action 'none'; "
+            "frame-ancestors 'none'")
+        for k, v in (extra_headers or []):
+            self.send_header(k, v)
+        # A brand-new session must be told its id. An existing session
+        # keeps the same cookie, so it is NOT re-sent on every request.
+        new_sid = getattr(self, "_new_session_sid", None)
+        if new_sid:
+            self.send_header("Set-Cookie", session_cookie(
+                new_sid, secure=_COOKIE_SECURE,
+                max_age=int(DEFAULT_SESSION_TTL_S)))
         self.end_headers()
         self.wfile.write(body)
 
@@ -727,47 +856,33 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        # The same security headers as the JSON routes, so the HTML
+        # document itself is protected (X-Frame-Options matters most
+        # here: it is what stops clickjacking the game).
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'none'; script-src 'unsafe-inline'; "
+            "style-src 'unsafe-inline'; connect-src 'self'; "
+            "img-src 'self' data:; base-uri 'none'; form-action 'none'; "
+            "frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 
     def do_GET(self) -> None:  # noqa: N802 - stdlib name
-        global _GAME
         if self.path == "/" or self.path.startswith("/index"):
             self._send_file(_HTML_PATH)
             return
-        if self.path == "/reset":
-            if _GAME is None:
-                _send_unavailable(self)
-                return
-            _GAME.reset()
-            self._send_json(200, _GAME.snapshot())
-            return
-        if self.path == "/undo":
-            if _GAME is None:
-                _send_unavailable(self)
-                return
-            ok = _GAME.undo_user()
-            self._send_json(200, {"undone": ok, "state": _GAME.snapshot()})
-            return
-        if self.path == "/state":
-            if _GAME is None:
-                _send_unavailable(self)
-                return
-            self._send_json(200, _GAME.snapshot())
-            return
-        if self.path.startswith("/probs"):
-            if _GAME is None:
-                _send_unavailable(self)
-                return
-            self._send_json(200, _GAME.column_probs())
-            return
-        if self.path.startswith("/reload"):
-            # Hot-swap in a freshly written checkpoint. The in-progress
-            # game is preserved; only the model behind it changes.
-            status = _reload_agent(reason="http")
-            self._send_json(200 if status.get("ok") else 409, status)
-            return
+        # /modelinfo and /reload are OPERATIONAL routes: they expose the
+        # checkpoint path and allow swapping the model. They must never
+        # be reachable from the public internet, so they are refused
+        # unless the server was explicitly started in local mode.
         if self.path.startswith("/modelinfo"):
+            if not _ALLOW_ADMIN:
+                self._send_json(403, {"error": "forbidden"})
+                return
             info = {
                 "checkpoint": str(_MODEL_PATH) if _MODEL_PATH else None,
                 "model_name": _MODEL_NAME,
@@ -787,16 +902,49 @@ class Handler(BaseHTTPRequestHandler):
                 # every couple of seconds.  That starved the server's
                 # request threads and made live requests time out.
                 "step": _MODEL_STEP,
+                "sessions": _SESSIONS.stats() if _SESSIONS else None,
             }
             self._send_json(200, info)
+            return
+        if self.path.startswith("/reload"):
+            if not _ALLOW_ADMIN:
+                self._send_json(403, {"error": "forbidden"})
+                return
+            # Hot-swap in a freshly written checkpoint. The in-progress
+            # game is preserved; only the model behind it changes.
+            status = _reload_agent(reason="http")
+            self._send_json(200 if status.get("ok") else 409, status)
+            return
+
+        if self._rate_limited():
+            self._send_json(429, {"error": "too many requests"})
+            return
+
+        sid, game, is_new = self._session(create=True)
+        if game is None:
+            _send_unavailable(self)
+            return
+        if self.path == "/reset":
+            game.reset()
+            self._send_json(200, game.snapshot())
+            return
+        if self.path == "/undo":
+            ok = game.undo_user()
+            self._send_json(200, {"undone": ok, "state": game.snapshot()})
+            return
+        if self.path == "/state":
+            self._send_json(200, game.snapshot())
+            return
+        if self.path.startswith("/probs"):
+            self._send_json(200, game.column_probs())
             return
         self.send_error(HTTPStatus.NOT_FOUND, "unknown GET")
 
     def do_POST(self) -> None:  # noqa: N802
-        global _GAME
-        if _GAME is None:
-            _send_unavailable(self)
-            return
+        if self.path.startswith("/reload") or self.path.startswith("/modelinfo"):
+            if not _ALLOW_ADMIN:
+                self._send_json(403, {"error": "forbidden"})
+                return
         length = int(self.headers.get("Content-Length", "0"))
         raw = self.rfile.read(length)
         try:
@@ -805,18 +953,27 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": f"bad request: {e}"})
             return
 
+        if self._rate_limited():
+            self._send_json(429, {"error": "too many requests"})
+            return
+
+        sid, game, is_new = self._session(create=True)
+        if game is None:
+            _send_unavailable(self)
+            return
+
         if self.path == "/seat":
             try:
-                _GAME.set_seat(int(req["seat"]))
+                game.set_seat(int(req["seat"]))
             except (KeyError, ValueError) as e:
                 self._send_json(400, {"error": f"bad seat: {e}"})
                 return
-            self._send_json(200, _GAME.snapshot())
+            self._send_json(200, game.snapshot())
             return
 
         if self.path == "/undo":
-            ok = _GAME.undo_user()
-            self._send_json(200, {"undone": ok, "state": _GAME.snapshot()})
+            ok = game.undo_user()
+            self._send_json(200, {"undone": ok, "state": game.snapshot()})
             return
 
         if self.path != "/move":
@@ -828,12 +985,12 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": f"bad request: {e}"})
             return
         try:
-            _GAME.user_move(col)
+            game.user_move(col)
         except ValueError as e:
             self._send_json(400, {"error": str(e),
-                                  "state": _GAME.snapshot()})
+                                  "state": game.snapshot()})
             return
-        self._send_json(200, _GAME.snapshot())
+        self._send_json(200, game.snapshot())
 
 
 def _send_unavailable(handler: Handler) -> None:
@@ -847,11 +1004,43 @@ def main() -> int:
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=7860)
     p.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
+    # --- public-deployment switches ------------------------------------
+    p.add_argument("--public", action="store_true",
+                   help="serve a PUBLIC site: disable /modelinfo and "
+                        "/reload, mark the session cookie Secure, and "
+                        "keep the rate limit on")
+    p.add_argument("--no-rate-limit", action="store_true",
+                   help="disable the per-session request budget (local "
+                        "debugging only)")
+    p.add_argument("--session-ttl", type=float, default=2 * 3600.0,
+                   help="idle lifetime of a session, in seconds")
+    p.add_argument("--max-sessions", type=int, default=512,
+                   help="maximum concurrent sessions (LRU eviction)")
+    p.add_argument("--cookie-secure", choices=["auto", "yes", "no"],
+                   default="auto",
+                   help="whether the session cookie carries the Secure "
+                        "attribute. 'auto' means Secure in --public mode. "
+                        "Use 'no' ONLY for a plain-HTTP test harness: a "
+                        "browser refuses to store a Secure cookie over "
+                        "HTTP, so the visitor would silently lose their "
+                        "session on every request.")
     args = p.parse_args()
 
     if not os.path.exists(args.model):
         print(f"ui_server: model not found at {args.model}", file=sys.stderr)
         return 2
+
+    global _COOKIE_SECURE, _RATE_LIMIT, _ALLOW_ADMIN, _SESSIONS
+    _COOKIE_SECURE = bool(args.public)
+    if args.cookie_secure == "yes":
+        _COOKIE_SECURE = True
+    elif args.cookie_secure == "no":
+        _COOKIE_SECURE = False
+    _RATE_LIMIT = not args.no_rate_limit
+    # The operational routes expose the checkpoint path and allow
+    # swapping the model. They are useful locally (the watcher polls
+    # /modelinfo) and dangerous in public, so `--public` turns them off.
+    _ALLOW_ADMIN = not args.public
 
     # The default request_queue_size is 5. The live-parity sweep fires
     # requests back-to-back (GET /state, POST /move, GET /state, ...) with
@@ -912,22 +1101,66 @@ def main() -> int:
         model_name = os.path.basename(args.model).removesuffix(".pt")
         global _GAME, _MODEL_PATH, _MODEL_DEVICE, _MODEL_NAME, _MODEL_MTIME
         global _MODEL_SIZE, _MODEL_SHA, _MODEL_STEP
-        _GAME = Game(agent, model_name=model_name)
+        global _CURRENT_AGENT
         # Remember what we are serving so /reload can pick up a newer
         # checkpoint written by a running trainer, without restarting.
         _MODEL_PATH = Path(args.model).resolve()
         _MODEL_DEVICE = args.device
         _MODEL_NAME = model_name
+        _CURRENT_AGENT = agent
         _MODEL_SIZE, _MODEL_MTIME = _fingerprint(_MODEL_PATH)
         _MODEL_SHA = _sha256(_MODEL_PATH)
         # Read the step ONCE, here, while we are already loading the file.
         # /modelinfo reports this cached value; reading it per-request would
         # load a 34 MB checkpoint on every poll and starve the server.
         _MODEL_STEP = _checkpoint_step(_MODEL_PATH)
+
+        # ---------------------------------------------------- sessions
+        # Each visitor gets their OWN Game. The factory reads the
+        # CURRENT agent from a module global rather than closing over
+        # the startup one: a session created AFTER a hot reload must
+        # play against the new checkpoint, not the one that was loaded
+        # when the process started.
+        def _new_game():
+            return Game(_CURRENT_AGENT, model_name=model_name)
+
+        _SESSIONS = SessionStore(
+            factory=_new_game,
+            ttl_s=float(args.session_ttl),
+            max_sessions=int(args.max_sessions),
+        )
+
+        # Sweep idle sessions so an unattended public server does not
+        # accumulate boards forever. A daemon thread, so it dies with the
+        # process.
+        store = _SESSIONS
+
+        def _sweeper():
+            while True:
+                time.sleep(_SESSION_SWEEP_INTERVAL_S)
+                try:
+                    n = store.sweep()
+                    if n:
+                        print(f"ui_server: swept {n} idle session(s)",
+                              flush=True)
+                except Exception:
+                    pass
+
+        threading.Thread(target=_sweeper, daemon=True,
+                         name="tg-session-sweeper").start()
+
         print(f"ui_server: serving http://{args.host}:{args.port}/ "
               f"(model={args.model})", flush=True)
-        print(f"ui_server: hot reload enabled -- GET /reload swaps in a newer "
-              f"checkpoint, GET /modelinfo shows what is served", flush=True)
+        if _ALLOW_ADMIN:
+            print("ui_server: hot reload enabled -- GET /reload swaps in a "
+                  "newer checkpoint, GET /modelinfo shows what is served",
+                  flush=True)
+        else:
+            print("ui_server: PUBLIC mode -- /modelinfo and /reload are "
+                  "disabled; per-session games are isolated", flush=True)
+        print(f"ui_server: session isolation on (ttl={args.session_ttl:.0f}s, "
+              f"max={args.max_sessions}, rate_limit={_RATE_LIMIT})",
+              flush=True)
         srv.serve_forever()
     except KeyboardInterrupt:
         pass
