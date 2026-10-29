@@ -637,16 +637,29 @@ namespace decision, G5 needs the hostname decision, and G7 needs the real URLs.
 | # | Action | Status |
 |---|---|---|
 | 1 | `tmp/test_sessions_unit.py` — run it | ✅ **47/47** — found 2 real bugs, both fixed |
-| 2 | Fix the reload/new-session closure (B3) | ✅ code fixed; test case still to write |
-| 3 | 200-game strength matrix for step 20000 | 🔄 running (`proc_117ae5eece0a`) |
-| 4 | 200-game strength matrix for step 40000 | ⏳ after #3 |
-| 5 | Reconcile every number into `release/RELEASE_RECORD.md` | ⏳ needs #3/#4 |
-| 6 | Freeze the artifact + SHA-256 | ⏳ needs #5 |
-| 7 | Full regression sweep against the new code | ⏳ needs #2's test case |
+| 2 | Fix the reload/new-session closure (B3) | ✅ code fixed + `tmp/test_ui_hot_reload.py` **17/17** |
+| 3 | 200-game strength matrix for step 20000 | ✅ done — 18000 ahead on **all 5 arms** |
+| 4 | 200-game strength matrix for step 40000 | 🔄 running (`proc_866a64fc5e55`) |
+| 5 | Reconcile every number into `release/RELEASE_RECORD.md` | ✅ §5.0 ledger + every doc reconciled |
+| 6 | Freeze the artifact + SHA-256 | ✅ `134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2` |
+| 7 | Full regression sweep against the new code | 🔄 running (`proc_d9a838e246a3`, UI port 7899) |
 | 8 | Restart 7860/7861 on the new code | ⏳ needs #7 |
-| 9 | Commit the session work | ✅ `b286aee` |
-| 10 | Switch `gh` to `Ckal`; stage + verify the release tree | ⏳ after #7 |
-| 11 | **Ask the user:** HF namespace handle + public hostname | 🔴 blocking G3/G4/G5 |
+| 9 | Commit the session work | ✅ `b286aee`, `d58f172` |
+| 10 | Switch `gh` to `Ckal`; stage + verify the release tree | ✅ **done — repo published** |
+| 11 | **Ask the user:** HF namespace handle + public hostname | 🔴 blocking G4/G5 |
+
+### Progress log
+
+- **G1 Evidence — CLOSED.** `release/RELEASE_RECORD.md` §5.0 is the single
+  publishable number table. Artifact frozen at step 18000 with SHA-256
+  `134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2`.
+- **G3 GitHub — CLOSED.** `https://github.com/Ckal/connect-four-gf256` is
+  public and verified via the GitHub API. 100 files, 2.1 MB, clean history,
+  local paths sanitized, `Christof Kaller` confirmed as the account owner.
+  The honest framing (both losses) is in the repo description and README.
+- **G4 Hugging Face — BLOCKED** on a Christof-owned namespace.
+- **G5 Public game — BLOCKED** on the hostname, and on #7/#8.
+
 
 ### Two questions only the user can answer
 
