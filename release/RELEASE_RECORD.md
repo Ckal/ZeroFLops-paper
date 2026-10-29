@@ -36,11 +36,20 @@ If a number is not in this file, it is not publishable.
 | GitHub (public source) | **`Ckal/connect-four-gf256`** — https://github.com/Ckal/connect-four-gf256 | **PUBLISHED 2026-10-29.** Repo verified public via `gh api repos/Ckal/connect-four-gf256`. Active `gh` account switched to `Ckal` (API: login `Ckal`, name `Christof Kaller`, email `Christof.Kaller@gmail.com`, blog `ckaller.blogspot.de`). Clean-history staging via `tmp/stage_public_repo.sh` (the source history holds a 118 MB blob that exceeds GitHub's 100 MB limit). Local Windows paths sanitized to `C:\Users\<user>` before publish. |
 | Blog | `ckaller.blogspot.de` | Blogger token present at `~/AppData/Local/hermes/google_token.json` |
 | LinkedIn | `de.linkedin.com/in/christof-kaller-6b043733` | profile found |
-| Hugging Face | **TBD — new namespace required** | The `ckal` HF namespace belongs to **a different person** and must not be used. The currently authenticated HF account is also the wrong public identity. |
+| Hugging Face model | **`Chris4K/connect-four-gf256`** | **PUBLIC — live 2026-10-29**, anonymous read verified (HTTP 200). Published artifact's SHA-256 re-verified after download: `134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2` — byte-identical to the frozen release copy. |
+| Hugging Face namespace | **`Chris4K`** — VERIFIED, write-tested | Email-verified `Christof.kaller@gmail.com`, fullname "CK". A repo was created and deleted under this namespace as a write probe. The `ckal` HF namespace belongs to **a different person** and must not be used. |
 
-> **Blocker (HF):** a new HF account/namespace under the Christof identity is
-> required before the model can be published. Do not upload under `AlexChen1403`
-> and do not squat `ckal`.
+> **HF namespace resolved.** The live `hf_hackathon_git` token authenticates as
+> **`Chris4K`** — email-verified `Christof.kaller@gmail.com`, fullname "CK" —
+> with the **write** role. Write access was confirmed by creating a probe repo
+> (`Chris4K/_writeprobe`) and then deleting it; the delete was confirmed with
+> `RepositoryNotFoundError`. The model will publish as
+> **`Chris4K/connect-four-gf256`**.
+>
+> Namespaces verified as belonging to *other* people and therefore off-limits:
+> `ckal` (Bob Kaleugher), `christof` (Christof Roduner). The CLI's
+> `hf auth whoami` reports a stale `AlexChen1403` label; the token's own
+> `whoami-v2` response is the authoritative answer and says `Chris4K`.
 
 **GitHub account note.** `gh` has two accounts: `alexchen1403-prog` (active)
 and `Ckal`. The public release uses `Ckal`. `gh auth switch --user Ckal` is
@@ -298,6 +307,24 @@ in the same direction, which is the point.
 Greedy-only 200-game comparison: 100-100 with 2 unique trajectories —
 a null result by construction, reported for completeness.
 
+### 5.3.1 Checkpoint selection is evidence-based, not "newest wins"
+
+Three checkpoints were measured against the full five-opponent matrix
+(600 games per arm). **Step 18 000 — the promoted checkpoint — wins every
+single arm.** Later steps are progressively weaker:
+
+| Checkpoint | vs random | vs heuristic | vs 2-ply | vs minimax | vs centre (head-to-head) |
+|---|---:|---:|---:|---:|---:|
+| **18 000 (released)** | **85.2 %** | **37.2 %** | **24.3 %** | **41.8 %** | **90.5 %** |
+| 20 000 | 84.7 % | 30.2 % | 24.0 % | 41.3 % | 86.7 % |
+| 40 000 | 83.8 % | 32.3 % | 18.2 % | 38.3 % | 82.7 % |
+
+This is the same plateau seen in the teacher-agreement curve: LABEL peaked at
+59.55 % at step 18 000 and then oscillated between 57.9 % and 59.4 % for
+28 000 further steps, while play strength *declined*. The highest-step
+checkpoint is **not** the best checkpoint, and the release ships the one
+that measured best.
+
 ### 5.4 The 200-game strength matrix (canonical `src.c4.duel`)
 
 Protocol: **200 games per arm per seed × 3 seeds (99, 1234, 4242) = 600 games
@@ -395,17 +422,19 @@ CPU-only container is sufficient; a GPU is not required for serving.
 | # | Deliverable | Where | Status |
 |---:|---|---|---|
 | 1 | Release record (this file) | `release/RELEASE_RECORD.md` | **done** (live-updating) |
-| 2 | Connect Four manuscript | `release/CONNECT_FOUR_PAPER.md` | pending |
-| 3 | Public README | `release/README.md` | pending |
-| 4 | New public GitHub repo under `Ckal` | — | pending (needs name + license decision) |
-| 5 | Model card + checkpoint on HF | — | **blocked: new HF namespace needed** |
-| 6 | Multi-user UI refactor | `src/c4/ui_server.py` | pending |
-| 7 | Public deployment on Netcup | — | pending (blocked by 6) |
-| 8 | X post | `https://x.com/zX14_7` | pending (no stored X session yet) |
-| 9 | Blog post | `ckaller.blogspot.de` | pending |
-| 10 | LinkedIn post | — | pending |
-| 11 | Short demo video | `release/media/` | pending (ffmpeg available; PIL via `python3`) |
-| 12 | Follow-up research plan | `release/FOLLOWUP_PLAN.md` | pending |
+| 2 | Connect Four manuscript | `release/CONNECT_FOUR_PAPER.md` | **done** — published on GitHub + HF |
+| 3 | Public README | `release/README.md` | **done** — published on GitHub + HF |
+| 4 | New public GitHub repo under `Ckal` | https://github.com/Ckal/connect-four-gf256 | **done 2026-10-29** — public, verified via API |
+| 5 | Model card + checkpoint on HF | https://huggingface.co/Chris4K/connect-four-gf256 | **done 2026-10-29** — public, SHA-256 re-verified after download |
+| 6 | Multi-user UI refactor | `src/c4/ui_server.py` | **done** — commit `b286aee`; 47/47 unit, 26/26 integration, 17/17 hot-reload |
+| 7 | Public deployment on Netcup | — | pending (blocked by 8 + a public hostname decision) |
+| 8 | Post-refactor regression sweep | `tmp/run_regression_sweep.sh` | **in progress** — 5 cookie-jar failures fixed; rerunning |
+| 9 | X post | `https://x.com/zX14_7` | pending (no stored X session yet) |
+| 10 | Blog post | `ckaller.blogspot.de` | pending |
+| 11 | LinkedIn post | — | pending |
+| 12 | Short demo video | `release/media/` | pending (ffmpeg available; PIL via `python3`) |
+| 13 | Product Hunt | — | pending (needs a repo/account decision) |
+| 14 | Follow-up research plan | `release/FOLLOWUP_PLAN.md` | **done** — published on GitHub |
 
 ### 7.1 Promotional copy — constraints
 
