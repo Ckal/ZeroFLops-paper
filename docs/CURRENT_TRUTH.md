@@ -2012,3 +2012,69 @@ resource.
 **Standing rule while V24 runs:** the volume has ~7 GB free and the run
 needs ~0.4 GB more. Do not run the full regression sweep repeatedly
 during the run — each sweep is fine, but do not leave scratch behind.
+
+### 5w. Host sleep during the V24 run — what actually happened (2026-10-29)
+
+The host went to sleep mid-run. The run survived, but the timeline needs
+recording because it looks alarming and is not.
+
+```text
+04:41:25  step 18000 logged        (LABEL 59.5%, HOLDOUT 35.7%)
+04:47:10  Windows Kernel-Power id 42   <- machine entered sleep
+04:47:16  Kernel-Power id 107          <- resumed (6 s later)
+05:58:14  Power-Troubleshooter id 1    <- final wake
+06:01     live step counter = 19439
+```
+
+**The machine was asleep for roughly 71 minutes**, not 6 seconds. The
+Kernel-Power pair (42 then 107) records the *transition request*; the
+Power-Troubleshooter event at **05:58:14** records the actual wake.
+Trusting 42/107 alone would have wrongly concluded a 6-second nap.
+
+**Nothing was lost or corrupted.** Verified after the wake:
+
+- trainer process alive (worker pid 42856, started 02:33:43), GPU 95 %,
+  409 W, actively in the training loop (py-spy: `build_batch` /
+  `_weighted_move_loss`);
+- all 8 checkpoints in `runs/_probe/v24/checkpoints/` load cleanly, with
+  correct `meta.step` and intact `opt_state` / `rng_state`;
+- zero `Traceback` / `error` / `corrupt` / `nan` lines in the trainer log;
+- the watcher and UI survived the sleep and are still serving the
+  promoted `best_hard.pt` at step 18000;
+- `.v24.lock` still held by the original chain.
+
+**Why the log looked stalled.** Log lines are written only every
+`--eval-every 2000` steps. Between step 18000 (04:41) and step 20000
+(06:06) there was an 85-minute wall-clock gap for a cycle that normally
+takes ~14 minutes. The extra time was the sleep, not a slow trainer:
+
+```text
+18000 -> 20000 = 2000 steps in 5109 s wall  -> 2.55 s/step  (sleep inside)
+instantaneous rate measured with py-spy = 0.395-0.822 s/step (normal)
+```
+
+The `t 12768s` in the step-20000 line is **wall-clock**, so it jumped
+from 7659 s to 12768 s across the sleep. That is expected: the trainer
+uses `time.time()`, and it measures real elapsed time, not CPU time.
+
+**Consequence for the ETA.** The wall-clock-based ETA is now pessimistic
+by exactly the sleep duration (~71 min). At the clean-machine rate of
+~0.42 s/step, the remaining 80,000 steps need ~9.3 h of *awake* time.
+
+**Consequence for the abort heuristics.** The trainer's plateau detector
+compares LABEL across evaluations. A sleep gap makes the elapsed time
+per evaluation look enormous. If the abort logic ever compares wall-clock
+rates, a sleeping host would look like a stalled run. It does not
+(currently it warns on flat LABEL), but this is the scenario that would
+make it dangerous.
+
+**Rules for the host:**
+
+- A sleeping host does NOT kill the run — the trainer resumes and the
+  checkpoints stay valid. Verified.
+- Do NOT conclude "the run is stuck" from a stale log alone. Check the
+  live step counter via py-spy `--locals` before intervening.
+- If the host will sleep again, expect an ~85-minute gap between eval
+  lines and do not treat it as a failure.
+- The watchdog must distinguish "log is old because the host slept" from
+  "log is old because the trainer died".

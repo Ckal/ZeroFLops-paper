@@ -3557,3 +3557,72 @@ The model is tracking the predicted learning curve exactly
 got 45.3%), and the playable page has already updated itself to the
 step-4000 model on its own.
 
+
+## 9.20 The computer went to sleep -- and everything survived (29 October 2026)
+
+You asked whether the run was still alive after the computer slept.
+Short answer: **yes, and nothing was lost.**
+
+What actually happened, which is a bit more interesting than "it slept
+for a minute":
+
+```text
+04:41   step 18000 written to the log
+04:47   the computer asks to go to sleep
+05:58   the computer actually wakes up     <- 71 minutes asleep
+06:01   the training is still going
+06:06   step 20000 written to the log
+```
+
+The gap between "asks to sleep" and "wakes up" is where I nearly
+misdiagnosed it. Windows records the *request* to sleep, which makes it
+look like a 6-second nap. The event that actually tells you when the
+machine came back says **05:58**. So the sleep was **71 minutes**, not
+six seconds. That is the number that explains the log gap.
+
+**Why the log looked stalled.** The trainer only writes a line every
+2,000 steps, which normally takes about 14 minutes. Across the sleep
+that cycle took 85 minutes. If you had only looked at the log, you
+would have concluded the training had hung or died.
+
+**How I actually checked, instead of guessing:**
+
+- Asked the operating system whether the training process still exists
+  -> yes, worker process alive since 02:33.
+- Looked inside the running process to see what it was doing -> it was
+  in the middle of the training loop, building batches, not stuck.
+- Read the **live step counter** out of the running process -> 19,439,
+  and climbing.
+- Measured how fast it was actually moving -> 0.395 seconds per step,
+  which is the normal speed.
+- Checked the graphics card -> 92 %, 408 W. It was working hard.
+- Loaded every saved checkpoint -> all eight load cleanly, with
+  correct step numbers and intact optimiser state.
+- Searched the log for errors -> zero.
+
+**Nothing was corrupted.** The trainer resumed exactly where it left
+off and wrote step 20000 twenty minutes later, with the checkpoint
+files all valid.
+
+**One number to be careful with.** The trainer prints how long it has
+been running, and that is *wall-clock* time -- it keeps counting while
+the machine sleeps. So it jumped from 7,659 seconds to 12,768 seconds
+even though the training did no extra work. If you plan from that
+number alone you will think it is running slower than it is.
+
+**Where it stands now:**
+
+```text
+step 20000 | LABEL 59.0% | HOLDOUT 36.2% | H-LABEL 38.9%
+```
+
+and the honest remaining time is **about 9.3 hours of awake time**,
+finishing around **15:30** -- not the ~16:40 the raw wall-clock
+suggested, because the sleep does not count as training time.
+
+**The lesson:** a stale log is not evidence of a dead run. Before
+interrupting anything, ask the machine what the process is actually
+doing, and read the counter inside it. I have also taught the
+automatic 45-minute watchdog to do exactly this, so if the computer
+sleeps again it will say "the host slept" instead of crying wolf.
+
