@@ -68,6 +68,11 @@ mkdir -p release
 cp "$ROOT/release/." "$TARGET/release/" 2>/dev/null || true
 find "$TARGET/release" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
 
+echo "-- verification scripts"
+# The README documents the isolation gate as a published artifact, so it
+# must ship with the repo -- otherwise the reader cannot re-run the check.
+copy "scripts/verify_public_isolation.py" "scripts/verify_public_isolation.py"
+
 echo "-- source"
 # The whole src/c4 package is copied, not a hand-picked subset: the
 # modules import each other (agent -> patterns, train -> corpus,

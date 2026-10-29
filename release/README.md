@@ -5,6 +5,13 @@ Connect Four board — and an honest measurement of how good it actually is.**
 
 Author: **Christof Ckal** · Project: ZeroFLops
 
+> ### ▶ Play it against the model
+>
+> **https://c4.tensorgarten.de**
+>
+> A real, session-isolated game — every visitor gets their own board.
+> Deployed on CPU. [Verified isolation + security claims](#security-verification).
+
 ---
 
 ## TL;DR
@@ -140,6 +147,40 @@ optimal**, not a chance of winning.
 > The public deployment uses **per-session boards**. The upstream research
 > UI keeps a single board in a module global and is **not** safe for
 > multi-user hosting as shipped.
+
+---
+
+
+## Security verification
+
+The public deployment is gated by a script that runs **against the deployed
+process over public HTTPS** — not against a local server.
+
+```bash
+python scripts/verify_public_isolation.py https://c4.tensorgarten.de
+# PASSED: 19   FAILED: 0
+```
+
+It asserts, and all of these currently hold:
+
+| Assertion | Result |
+|---|---|
+| `GET /` returns 200 with a real page | PASS |
+| Content-Security-Policy, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, HSTS | PASS |
+| Two clients receive **different** session cookies | PASS |
+| The session cookie is `HttpOnly` and `Secure` | PASS |
+| **A move in one session is invisible in another** — no shared board | PASS |
+| `/modelinfo` and `/reload` are closed in public mode (HTTP 403) | PASS |
+
+The session cookie as served:
+
+```
+Set-Cookie: tg_sid=<opaque id>; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=7200
+```
+
+The checkpoint served by the public container is byte-identical to the one
+on Hugging Face — SHA-256
+`134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2`.
 
 ---
 

@@ -386,34 +386,81 @@ LABEL curve says no, and the matrix is the check.
 
 ---
 
-## 6. Live game — the deployment blocker
+## 6. Live game — DEPLOYED AND VERIFIED
 
-`src/c4/ui_server.py` keeps the game in a **module-level global `_GAME`**.
-Every visitor therefore sees **the same board**. The UI cannot be published
-as-is: two visitors would corrupt each other's game.
+**Status: live and publicly reachable since 2026-10-29.**
 
-**This must be fixed before any public deployment.** Required work:
+- **URL:** https://c4.tensorgarten.de
+- **Host:** Netcup `159.195.150.113`, service `c4-game` in
+  `/opt/netcup-infra/docker-compose.yml`, image
+  `netcup-infra-c4-game` (built from
+  `/opt/netcup-infra/apps/c4-game/app/Dockerfile`).
+- **Runtime:** `python:3.12-slim` + `torch==2.5.1+cpu` + `numpy==1.26.4`.
+  CPU-only: the GF(256) trunk is integer arithmetic and the float32
+  read-out needs no GPU. The model is 32 MB, ~8.4 M parameters.
+- **Serving mode:** `--public`. Administrative routes are disabled and the
+  session cookie is marked `Secure`.
+- **Container state:** `healthy`, 0 restarts.
 
-1. Replace `_GAME` with a **per-session store** keyed by an opaque,
-   unguessable session id (HttpOnly cookie or signed token).
-2. Bounded store with TTL + eviction, so memory does not grow unbounded.
-3. **Stateless model inference**: the checkpoint is read-only and shared;
-   only the *board* is per-session. The model is already a pure function
-   of (checkpoint, board) — no session state leaks into it.
-4. Rate limiting and request-size limits.
-5. Tests: two concurrent sessions must not see each other's boards;
-   a third party must not be able to guess a session id; the store must
-   evict under load.
+### 6.1 The original blocker (now resolved)
 
-**Deployment target:** Netcup `159.195.150.113`, which already runs
-Docker + nginx (`/opt/netcup-infra/docker-compose.yml`, service
-`netcup-infra-python-app-1`, image has torch installed). DNS for a new
-subdomain under `*.tensorgarten.de` → `159.195.150.113` already resolves.
+The pre-refactor server kept the game in a **module-level global `_GAME`**,
+so every visitor saw **the same board**. Two visitors would have corrupted
+each other's game, and the UI could not be published.
 
-**Serving cost:** the hard inference path is GF(256) integer arithmetic.
-The model is 32 MB, ~8.4 M parameters, and the read-out is float32 — so
-"zero FLOPs" applies to the *trunk*, not to the complete model. A
-CPU-only container is sufficient; a GPU is not required for serving.
+The refactor replaced `_GAME` with a **per-session store** keyed by an
+opaque, unguessable session id in an `HttpOnly` cookie, with TTL + eviction
+so memory stays bounded. Model inference remains stateless: the checkpoint
+is read-only and shared, and only the *board* is per-session — the model is
+a pure function of (checkpoint, board), so no session state leaks into it.
+
+### 6.2 The verification that gates the announcement
+
+`tmp/verify_public_isolation.py` runs **against the deployed process over
+public HTTPS**, not against a local server. A local 200 is not evidence of
+a safe public deploy.
+
+```
+PASSED: 19   FAILED: 0
+```
+
+| Assertion | Result |
+|---|---|
+| `GET /` returns 200 with a real page | PASS (28,234 bytes) |
+| Content-Security-Policy present | PASS |
+| `X-Frame-Options: DENY` | PASS |
+| `X-Content-Type-Options: nosniff` | PASS |
+| `Referrer-Policy` present | PASS |
+| `Strict-Transport-Security` present | PASS |
+| `Cache-Control: no-store` | PASS |
+| Both clients receive a session cookie | PASS (`tg_sid`) |
+| The two session cookies differ | PASS |
+| Session cookie is `HttpOnly` | PASS |
+| Session cookie is `Secure` | PASS |
+| Both boards start empty | PASS |
+| Client A can make a legal move | PASS |
+| Client A's board shows the move | PASS |
+| **Client B's board is still empty — no shared state** | PASS |
+| `GET /modelinfo` blocked | PASS (HTTP 403) |
+| `GET /reload` blocked | PASS (HTTP 403) |
+| The move response carries the new board state | PASS |
+
+The raw cookie as served by the deployed container:
+
+```
+Set-Cookie: tg_sid=uH5kQSTeQt0-fIz0eyKNPoxKiXDLj0-U30kFZdwonEs;
+            Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=7200
+```
+
+### 6.3 Checkpoint identity on the server
+
+The checkpoint served by the deployed container is byte-identical to the
+published Hugging Face artifact:
+
+```
+134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2
+  /opt/netcup-infra/apps/c4-game/app/model/best_hard.pt
+```
 
 ---
 
@@ -427,8 +474,9 @@ CPU-only container is sufficient; a GPU is not required for serving.
 | 4 | New public GitHub repo under `Ckal` | https://github.com/Ckal/connect-four-gf256 | **done 2026-10-29** — public, verified via API |
 | 5 | Model card + checkpoint on HF | https://huggingface.co/Chris4K/connect-four-gf256 | **done 2026-10-29** — public, SHA-256 re-verified after download |
 | 6 | Multi-user UI refactor | `src/c4/ui_server.py` | **done** — commit `b286aee`; 47/47 unit, 26/26 integration, 17/17 hot-reload |
-| 7 | Public deployment on Netcup | — | pending (blocked by 8 + a public hostname decision) |
-| 8 | Post-refactor regression sweep | `tmp/run_regression_sweep.sh` | **in progress** — 5 cookie-jar failures fixed; rerunning |
+| 7 | Public deployment on Netcup | https://c4.tensorgarten.de | **done 2026-10-29** — live, `healthy`, 19/19 isolation+security assertions pass |
+| 8 | Post-refactor regression sweep | `tmp/run_regression_sweep.sh` | **in progress** — re-running after the host reboot; 10 PASS / 0 FAIL at last check |
+| 8b | Second paper (language model) | `release/GF256_LANGUAGE_MODEL_PAPER.md` | **done** — written and committed; publication destination pending |
 | 9 | X post | `https://x.com/zX14_7` | pending (no stored X session yet) |
 | 10 | Blog post | `ckaller.blogspot.de` | pending |
 | 11 | LinkedIn post | — | pending |

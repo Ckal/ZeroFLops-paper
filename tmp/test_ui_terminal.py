@@ -18,12 +18,22 @@ Two things are checked:
 from __future__ import annotations
 
 import argparse
+import http.cookiejar
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 
 sys.path.insert(0, ".")
+
+# The UI server is session-scoped: each visitor gets its own board, keyed by
+# an HttpOnly cookie. A client WITHOUT a cookie jar therefore sees a fresh
+# board on every request, so /seat and /state would land on different games.
+# This test drives ONE visitor, so it needs ONE cookie jar.
+_JAR = http.cookiejar.CookieJar()
+_OPENER = urllib.request.build_opener(
+    urllib.request.HTTPCookieProcessor(_JAR))
 
 FAILS: list[str] = []
 
@@ -36,7 +46,7 @@ def req(method: str, url: str, body: dict | None = None) -> dict:
         headers["Content-Type"] = "application/json"
     r = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(r, timeout=60) as resp:
+        with _OPENER.open(r, timeout=60) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         raw = e.read().decode("utf-8")
@@ -56,7 +66,8 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=7860)
+    ap.add_argument("--port", type=int,
+                    default=int(os.environ.get("UI_PORT", "7860")))
     args = ap.parse_args()
     base = f"http://127.0.0.1:{args.port}"
 
