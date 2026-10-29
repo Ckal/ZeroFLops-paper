@@ -217,4 +217,17 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Reap the scratch run dirs at the END too. Each holds a corpus copy,
+    # a sidecar copy and full checkpoints (~1.4 GB together). Cleaning only
+    # at the start leaves that on disk after every successful run, which
+    # is how the volume filled up during the V24 launch.
+    try:
+        code = main()
+    finally:
+        for _d in (RUN, ROOT / "runs/_probe/_resume_state_test2",
+                   ROOT / "runs/_probe/_resume_state_test3"):
+            try:
+                shutil.rmtree(_d, ignore_errors=True)
+            except Exception:
+                pass
+    raise SystemExit(code)

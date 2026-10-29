@@ -190,4 +190,12 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # Reap the scratch dir at the END too. It holds two full training runs
+    # with corpus + sidecar + optimiser state (~1.2 GB). Cleaning only at
+    # the start means a successful run leaves that on disk forever, which
+    # is how the volume filled up during the V24 launch.
+    try:
+        code = main()
+    finally:
+        shutil.rmtree(SCRATCH, ignore_errors=True)
+    sys.exit(code)
