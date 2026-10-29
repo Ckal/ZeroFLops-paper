@@ -7930,3 +7930,84 @@ The run needs ~0.4 GB more than it has already used. Do not leave
 scratch behind while it is live, and do not run the full sweep
 repeatedly.
 
+
+## Appendix D33 — host sleep during the V24 run (2026-10-29 04:47 → 05:58)
+
+### What happened
+
+```text
+04:41:25  step 18000 logged
+04:47:10  Kernel-Power id 42   (sleep REQUEST)
+04:47:16  Kernel-Power id 107  (resume request acknowledged)
+05:58:14  Power-Troubleshooter id 1  <- ACTUAL wake
+06:01     live step counter = 19439
+06:06:34  step 20000 logged (t 12768s)
+```
+
+**The host was asleep ~71 minutes.** Kernel-Power 42/107 records only the
+transition request and made it look like a 6-second nap. The
+Power-Troubleshooter event id 1 is the one that carries the real wake
+time. Reading 42/107 alone would have produced a wrong diagnosis.
+
+### Survival verified
+
+| Check | Result |
+|---|---|
+| trainer worker pid 42856 | alive since 02:33:43 |
+| py-spy stack | `build_batch` / `_weighted_move_loss` — training, not hung |
+| live step counter | 19439 at 06:01, 20100 at 06:07 |
+| instantaneous rate | 0.395 s/step (normal: 0.419–0.438) |
+| GPU | 92 %, 408 W |
+| all 8 checkpoints | load cleanly, correct `meta.step`, intact `opt_state`/`rng_state` |
+| log errors | 0 (`Traceback`/`error`/`corrupt`/`nan`) |
+| watcher + UI | alive, serving promoted `best_hard.pt` at step 18000 |
+| `.v24.lock` | still held by the original chain |
+
+### Why the log looked stalled
+
+Eval lines are written every `--eval-every 2000` steps, ~14 min
+normally. The 18000 → 20000 cycle took 5109 s wall-clock because the
+sleep was inside it.
+
+```text
+overall for the span : 2.55 s/step   (sleep included)
+instantaneous, awake  : 0.395 s/step  (normal)
+```
+
+### Two numbers to be careful about
+
+1. **`t NNs` is wall-clock.** It jumped 7659 → 12768 s across the sleep
+   while no extra work happened. Any ETA derived from it is pessimistic
+   by exactly the sleep duration.
+2. **Elapsed-per-evaluation is not a health signal.** It jumps after any
+   host sleep. The plateau abort logic keys on flat LABEL, not on rate,
+   so it is unaffected — but any future rate-based abort would
+   misfire on a sleeping host.
+
+### Revised ETA
+
+80,000 steps remain at ~0.42 s/step of *awake* time = **~9.3 h**,
+finishing around **15:30** (not ~16:40 from raw wall-clock).
+
+### Tooling change
+
+`py-spy` is now installed in `.venv-c4`. The live step counter is
+readable with:
+
+```bash
+./.venv-c4/Scripts/py-spy.exe dump --pid <worker_pid> --locals | grep step:
+```
+
+This is the correct way to answer "is it still running?" — `ps` shows the
+process exists, but only this shows it is *advancing*.
+
+The watchdog `54e457966d02` was rewritten to use it, and to consult
+Power-Troubleshooter before declaring a stall. Its previous version last
+fired at 04:07, before the sleep, so it never saw the gap — the new
+version cannot confuse "host slept" with "run died".
+
+### Operational rule
+
+**A stale log is not evidence of a dead run.** Before interrupting
+anything: check the process exists, read the live step counter, check
+GPU utilisation, then decide.
