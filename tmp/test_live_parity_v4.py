@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import pathlib
 import random
+import os
 import sys
 import urllib.request
 
@@ -31,7 +32,7 @@ import torch  # noqa: E402
 
 from src.c4.board import Board  # noqa: E402
 
-BASE = "http://127.0.0.1:7860"
+BASE = "http://127.0.0.1:" + os.environ.get("UI_PORT", "7860")
 
 
 def get(path):

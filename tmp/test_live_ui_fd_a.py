@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import json
 import pathlib
+import os
 import sys
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-BASE = "http://127.0.0.1:7860"
+BASE = "http://127.0.0.1:" + os.environ.get("UI_PORT", "7860")
 EXPECTED = "runs/_probe/fd_a_s6000/checkpoints/step6000_hard.pt"
 
 FAILS = []
