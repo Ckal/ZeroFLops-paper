@@ -47,7 +47,7 @@ and an artifact.
 
 The trunk is a GF(2⁸) integer program — the same architecture as the
 companion language-modelling work
-[*GF(256) Lagrange Field Transformer*](https://github.com/Ckal/zeroflops),
+[*GF(256) Lagrange Field Transformer*](GF256_LANGUAGE_MODEL_PAPER.md),
 applied here to a game.
 
 ```
@@ -117,11 +117,19 @@ genuinely distinct:
 ```bash
 # 1. Download the checkpoint (32.3 MB)
 curl -L -o best_hard.pt \
-  https://huggingface.co/<HF_NAMESPACE>/<HF_REPO>/resolve/main/best_hard.pt
+  https://huggingface.co/Chris4K/connect-four-gf256/resolve/main/best_hard.pt
 
-# 2. Play it
-python -m src.c4.ui_server --checkpoint best_hard.pt --port 7860
+# 2. Play it (the server takes --model; --checkpoint does not exist)
+python -m src.c4.ui_server --model best_hard.pt --port 7860 --device cpu
 # open http://127.0.0.1:7860/
+```
+
+`best_hard.pt` is the step-18,000 hard export. Verify the download before
+using it:
+
+```bash
+sha256sum best_hard.pt
+# 134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2
 ```
 
 The UI shows the model's next-move distribution over all seven columns
@@ -205,11 +213,14 @@ save 9/9 · transcript stamp 3/3 · watcher 12/12.
 
 ```
 release/
-├── README.md                  this file
-├── RELEASE_RECORD.md          every published number → command + artifact
-├── CONNECT_FOUR_PAPER.md     the manuscript
-├── FOLLOWUP_PLAN.md           what comes next
-└── media/                     demo assets
+├── README.md                      this file
+├── RELEASE_RECORD.md              every published number → command + artifact
+├── CONNECT_FOUR_PAPER.md         the Connect Four manuscript
+├── GF256_LANGUAGE_MODEL_PAPER.md the companion language-model manuscript
+├── FOLLOWUP_PLAN.md               what comes next
+├── MODEL_CARD.md                 the model card
+├── SOCIAL_COPY.md                ready-to-post social copy
+└── media/                         demo assets
 
 src/
 ├── c4/
@@ -262,10 +273,10 @@ docs/                          the full research record
 
 ## Companion work
 
-- *GF(256) Lagrange Field Transformer — A Discrete Algebraic Language Model
-  Compiled to Zero-FLOP Integer Programs* — Hard BPC 3.071 on Tiny
+- *GF(256) Lagrange Field Transformer — A Character-Level Language Model
+  Whose Trunk Compiles to an Integer Program* — Hard BPC 3.071 on Tiny
   Shakespeare. **A separate work**; shares the architecture, not the
-  findings.
+  findings. Full text: [`GF256_LANGUAGE_MODEL_PAPER.md`](GF256_LANGUAGE_MODEL_PAPER.md).
 
 ## License
 

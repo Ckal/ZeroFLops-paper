@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import http.cookiejar
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -72,7 +73,11 @@ def board_from_cells(cells: list[list[int]]) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=7860)
+    # UI_PORT is exported by tmp/run_regression_sweep.sh so a sweep UI on a
+    # non-default port is actually exercised. Without this the test silently
+    # targets 7860 -- a DIFFERENT, possibly pre-refactor server -- and the
+    # failures look like product bugs.
+    ap.add_argument("--port", type=int, default=int(os.environ.get("UI_PORT", "7860")))
     ap.add_argument("--base", default=None)
     args = ap.parse_args()
     base = args.base or f"http://127.0.0.1:{args.port}"

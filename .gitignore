@@ -46,3 +46,30 @@ tmp/*.pt
 V1*.TXT
 V*_TRAIN_LOG.TXT
 PLAN_*.md
+
+# ---- private training corpora -------------------------------------------
+# The Connect Four corpus is private: it was generated locally and is NOT
+# published. It must never be committed by accident. (27 MB of solver-labelled
+# games; the public release ships the *checkpoint*, never the corpus.)
+data/corpus_c4_bytes.txt
+data/corpus_*.txt
+data/*sidecar*
+data/*targets*.npy
+data/*.npy
+
+# ---- loose probe scripts at the repo root ------------------------------
+# One-off diagnostics written while chasing individual questions. The
+# curated regression tests in tmp/ capture the durable assertions; these
+# throwaway probes are not part of the release surface.
+tg_*.py
+run_*.sh
+check_outcome_rl.py
+chk.bat
+kill_rl.bat
+kill_v7.bat
+py.sh
+tmp_dbg_threat.py
+tmpstatus_*.txt
+v18_*.json
+worldweb-assets.html
+_tmp_*.npy
