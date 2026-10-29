@@ -154,6 +154,67 @@ corpus and reported an inflated 64.28 % instead of the true 59.00 %.
 
 ## 5. Measured results — the honest picture
 
+### 5.0 Authoritative numbers — THE release ledger
+
+> **Gate: these are the only numbers that may be published.** Every document
+> (paper, README, model card, blog, social posts) cites this table and nothing
+> else. If a number is not here, it is not publishable.
+
+Recorded 2026-10-29 08:47. The strength rows come from the 200-game × 3-seed
+matrix in `runs/_probe/ingame_strength_step*.json`; the label rows come from
+the authoritative scorer against the owner corpus `runs/_probe/v24`.
+
+| Key | Value | Source |
+|---|---|---|
+| `artifact_step` | **18000** | `best_hard.pt` top-level `step` |
+| `artifact_path` | `runs/_probe/v24/checkpoints/best_hard.pt` | promoted checkpoint |
+| `artifact_bytes` | 33,830,949 | `stat` |
+| `parameters` | 8,422,496 | `sum(p.numel() for p in model.parameters())` |
+| `artifact_sha256` | `134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2` | `sha256sum` of the frozen copy |
+| `label_agreement_train` | **59.55 %** | `tmp/measure_promotion_scorer.py --corpus-run runs/_probe/v24`; also `metrics.jsonl` `perply_agreement_pct` at step 18000 |
+| `label_agreement_holdout` | **41.02 %** | `metrics.jsonl` `holdout_perply_agreement_pct` at step 18000 (n=512) |
+| `corpus_games` | 320,000 | trainer preflight row count |
+| `corpus_labels` | 4,462,571 | per-ply label count |
+| `corpus_boards_scanned` | 5,100,175 | corpus integrity scan |
+| `corpus_violations` | 0 | preflight |
+| `transcript_version` | v2 | checkpoint meta |
+| `context_width` | 192 | trainer `--ctx` |
+| `batch_size` | 16 | trainer `--batch` |
+| `seed` | 32 | trainer `--seed` |
+| `lags` | 0–10, 20 | checkpoint meta |
+| `table_bias` | 0.0 | trainer `--table-bias` |
+| `inference` | CPU-only | `exp_t`/`log_t` are CPU tensors |
+| `solver_holdout_coverage` | 560 / 1,500 = **37.3 %** | exact-solver holdout audit |
+| **strength vs random** | **85.17 %** (511-88-1, n=600) | §5.4 |
+| **strength vs centre_policy** | **90.50 %** (543-57-0, n=600) | §5.4 |
+| **strength vs 1-ply heuristic** | **37.17 %** (223-376-1, n=600) | §5.4 |
+| **strength vs 2-ply lookahead** | **24.33 %** (146-452-2, n=600) | §5.4 |
+| **strength vs minimax** | **41.83 %** (251-343-6, n=600) | §5.4 |
+| `best_constant_baseline` | `centre_policy` (546-54 vs random) | §5.4 |
+| `model_vs_centre_policy_fisher_p` | 0.0024 | model LOSES, significant |
+| `col_recall_train_c0` | 63.7 % | `metrics.jsonl` `perply_col_recall[0]` |
+| `col_recall_train_c1` | 56.5 % | `perply_col_recall[1]` |
+| `col_recall_train_c2` | 56.2 % | `perply_col_recall[2]` |
+| `col_recall_train_c3` | 73.9 % | `perply_col_recall[3]` — the centre, the strongest |
+| `col_recall_train_c4` | 50.1 % | `perply_col_recall[4]` |
+| `col_recall_train_c5` | 43.3 % | `perply_col_recall[5]` |
+| `col_recall_train_c6` | 43.7 % | `perply_col_recall[6]` |
+| `col_recall_holdout_c1` | 42.1 % | `holdout_perply_col_recall[1]` |
+| `col_recall_holdout_c5` | 18.6 % | `holdout_perply_col_recall[5]` — weakest |
+| `col_recall_holdout_c6` | 7.1 % | `holdout_perply_col_recall[6]` — weakest |
+
+**The c1–c4 finding.** The model is measurably better on the **centre column
+(c3, 73.9 % recall)** than on the flanks, and its worst columns are the
+**outer ones** (c5 43.3 %, c6 43.7 % on train; 18.6 % and 7.1 % on holdout).
+This is the residual of the historical "always-c3" defect: the repair fixed the
+*hard* centre bias, but a soft centre preference survives. The model's
+weakest play is exactly where `centre_policy` is strongest — which is why it
+loses to that baseline.
+
+**The one-line truth:** the model reaches **85 % vs random** but **loses to a
+policy that only plays the centre column** (90.5 %), and is **net negative
+against a 1-ply heuristic** (37 %). It is not a strong Connect Four player.
+
 ### 5.1 The convergence curve (V24, tag `v24`)
 
 Source: `runs/_probe/v24/metrics.jsonl`, 4000-sample holdout, 512-position
@@ -216,11 +277,69 @@ W208 L192  (52.0 %, one-sided p = 0.45)
 first divergence at ply 16
 ```
 
-Statistically inconclusive. **Promoted 18000 is the recommended playable
-model** because its authoritative LABEL is higher (59.55 % vs 59.00 %).
+Statistically inconclusive on the direct duel. **But the 200-game strength
+matrix resolves it** (§5.4): step 18000 is ahead of step 20000 on **all five**
+opponent arms. Both the label metric and actual play agree — and they agree
+in the same direction, which is the point.
+
+| Opponent | step 18000 | step 20000 | Better |
+|---|---:|---:|---|
+| random | **85.17 %** | 84.67 % | 18000 |
+| centre_policy | **90.50 %** | 86.67 % | 18000 |
+| 1-ply heuristic | **37.17 %** | 30.17 % | 18000 |
+| 2-ply lookahead | **24.33 %** | 24.00 % | 18000 (tie) |
+| minimax | **41.83 %** | 41.33 % | 18000 (tie) |
+
+**Promoted 18000 is the recommended playable model.**
 
 Greedy-only 200-game comparison: 100-100 with 2 unique trajectories —
 a null result by construction, reported for completeness.
+
+### 5.4 The 200-game strength matrix (canonical `src.c4.duel`)
+
+Protocol: **200 games per arm per seed × 3 seeds (99, 1234, 4242) = 600 games
+per arm.** The model is **greedy** (ε=0) on the **hard** path; the opponent
+explores (ε=0.3) except against random, which is fully random. Every arm must
+reach ≥ 20 genuinely distinct legal trajectories; the minimum observed was
+182/600. The script seeds the global RNG itself, because `src.c4.duel.duel`
+ignores its own `seed` argument.
+
+Reproduce:
+
+```bash
+./.venv-c4/Scripts/python.exe -u tmp/audit_ingame_strength_fd_a.py \
+  --ckpt runs/_probe/v24/checkpoints/best_hard.pt \
+  --out runs/_probe/ingame_strength_v24_best.json --games 200
+```
+
+**Step 18000 (the release artifact)** — `runs/_probe/ingame_strength_v24_best.json`:
+
+| Opponent | Model W-L-D | Win % | Best constant baseline | Fisher p (model vs best) | Verdict |
+|---|---:|---:|---|---:|---|
+| random | 511-88-1 | **85.17 %** | centre_policy (546-54) | 0.0024 | **MODEL LOSES** |
+| heuristic (1-ply) | 223-376-1 | **37.17 %** | always-c0 | 0.00007 | model beats the constant, still loses the opponent |
+| lookahead (2-ply) | 146-452-2 | **24.33 %** | centre_policy | 0.0004 | model beats the constant |
+| minimax | 251-343-6 | **41.83 %** | centre_policy | 0.3165 | no significant difference |
+| centre (centre column only) | 543-57-0 | **90.50 %** | always-c0 | 6.9e-09 | model beats the constant, still loses the opponent |
+
+**What this says, precisely:**
+
+- The model beats random **decisively** (85 %, p ≈ 1e-70 vs. 50 %).
+- The model **loses to `centre_policy`** — a policy that plays the middle
+  column — with a significant Fisher exact p = 0.0024.
+- Against the 1-ply heuristic the model wins only **37 %** of games.
+- Against 2-ply lookahead it wins **24 %**.
+
+`centre_policy` is deliberately *not* a solver: it is a simple central-column
+rule with ε-exploration. The model is beaten by it. That is the headline
+negative result of this release.
+
+**Step 20000** — `runs/_probe/ingame_strength_step20000.json`: 84.67 / 86.67 /
+30.17 / 24.00 / 41.33 %. Worse than 18000 on every arm.
+
+**Step 40000** — `runs/_probe/ingame_strength_step40000.json`: see the change
+log. Measured to test whether "more steps" produces a stronger player; the
+LABEL curve says no, and the matrix is the check.
 
 ---
 

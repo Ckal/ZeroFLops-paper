@@ -131,7 +131,13 @@ for t in tmp/test_*.py; do
     test_is_full.py|test_ui_isfull.py) continue ;;   # superseded by _v2
   esac
   out="runs/_probe/_sweep_${SWEEP_ID}_$(basename "$t" .py).log"
-  timeout 900 ./.venv-c4/Scripts/python.exe -u "$t" > "$out" 2>&1
+  # The live-parity tests compare the UI server against an independent
+  # probe. They must talk to THIS sweep's server, not to whatever
+  # happens to be listening on the default port -- otherwise the test
+  # silently measures a different model and reports a false mismatch.
+  # UI_PORT is exported so the tests (which read os.environ) follow
+  # the sweep's port.
+  UI_PORT="$UI_PORT" timeout 900 ./.venv-c4/Scripts/python.exe -u "$t" > "$out" 2>&1
   rc=$?
   if [ $rc -eq 0 ]; then
     PASS=$((PASS+1)); echo "PASS  $name" >> "$LOG"
