@@ -65,9 +65,16 @@ def row_entropy(p):
     return -(p * (p + 1e-12).log()).sum(-1).mean()
 
 class GFLayer(nn.Module):
-    def __init__(self, d, fan_in, lags, coef_set, gen):
+    def __init__(self, d, fan_in, lags, coef_set, gen, table_bias=1.0):
         super().__init__()
         self.d, self.fan_in, self.lags = d, fan_in, lags
+        # See src/gf256_markov_lm_v6_1.py GFLayer.__init__ for why this
+        # exists: the identity/one-hot init bonus creates a ~7.7-logit
+        # margin that Adam cannot cross within a realistic step budget,
+        # which freezes the exported integer tables and leaves the hard
+        # export board-blind. 1.0 = historical, 0.0 = unbiased.
+        # The RNG draw order is unchanged, so coef_set is unaffected.
+        self.table_bias = float(table_bias)
         K = len(coef_set)
 
         ch = torch.randint(0, d, (d, fan_in), generator=gen)
@@ -83,13 +90,13 @@ class GFLayer(nn.Module):
         with torch.no_grad():
             one_idx = coef_set.index(1)
             zero_idx = coef_set.index(0)
-            self.coef_logits[:, 0, one_idx] += 6.0
+            self.coef_logits[:, 0, one_idx] += 6.0 * self.table_bias
             if fan_in > 1:
-                self.coef_logits[:, 1:, zero_idx] += 4.0
+                self.coef_logits[:, 1:, zero_idx] += 4.0 * self.table_bias
 
         sbox = 0.1 * torch.randn(d, 256, 256, generator=gen)
         ar256 = torch.arange(256)
-        sbox[torch.arange(d)[:, None], ar256[None, :], ar256[None, :]] += 8.0
+        sbox[torch.arange(d)[:, None], ar256[None, :], ar256[None, :]] += 8.0 * self.table_bias
         self.sbox_logits = nn.Parameter(sbox)
         self.ste = False
 
@@ -116,11 +123,18 @@ class GFLayer(nn.Module):
 
 class GFMarkovLM(nn.Module):
     def __init__(self, d=64, layers=6, fan_in=4, lags=(0, 1, 2, 4, 8, 16, 32, 64, 128, 256),
-                 n_coef=16, bigram_logp=None, seed=0):
+                 n_coef=16, bigram_logp=None, seed=0, table_bias=1.0):
         super().__init__()
         gen = torch.Generator().manual_seed(seed)
         self.d = d
         self.lags = list(lags)
+        # See src/gf256_markov_lm_v6_1.py GFLayer.__init__ for why this
+        # exists: the identity/one-hot init bonus creates a ~7.7-logit
+        # margin that Adam cannot cross within a realistic step budget,
+        # which freezes the exported integer tables and leaves the hard
+        # export board-blind. 1.0 = historical, 0.0 = unbiased.
+        # The RNG draw order is unchanged, so coef_set is unaffected.
+        self.table_bias = float(table_bias)
 
         coef_set = [0, 1]
         while len(coef_set) < n_coef:
@@ -137,13 +151,14 @@ class GFMarkovLM(nn.Module):
 
         emb = 0.1 * torch.randn(256, d, 256, generator=gen)
         ar256 = torch.arange(256)
-        emb[ar256, 0, ar256] += 10.0
+        emb[ar256, 0, ar256] += 10.0 * self.table_bias
         for j in range(1, d):
-            emb[ar256, j, torch.randperm(256, generator=gen)] += 8.0
+            emb[ar256, j, torch.randperm(256, generator=gen)] += 8.0 * self.table_bias
         self.emb_logits = nn.Parameter(emb)
 
         self.layers = nn.ModuleList([
-            GFLayer(d, fan_in, self.lags, coef_set, gen) for _ in range(layers)
+            GFLayer(d, fan_in, self.lags, coef_set, gen,
+                    table_bias=self.table_bias) for _ in range(layers)
         ])
 
         self.readout = nn.ParameterList([
@@ -182,8 +197,10 @@ class GFMarkovLM(nn.Module):
         return ent / (1 + 2 * len(self.layers)), perm_pen / max(1, len(self.layers))
 
     @torch.no_grad()
-    def export_hard(self):
-        return {
+    def export_hard(self, meta: dict | None = None):
+        """Export the integer tables. `meta` is stored verbatim so a resumed
+        run can recover the step counter and keep its schedules aligned."""
+        out = {
             "emb": self.emb_logits.argmax(-1),
             "coef": [torch.tensor(self.coef_set, device=L.coef_logits.device)[L.coef_logits.argmax(-1)] for L in self.layers],
             "sbox": [L.sbox_logits.argmax(-1) for L in self.layers],
@@ -192,7 +209,114 @@ class GFMarkovLM(nn.Module):
             "bias": self.readout_bias.detach(),
             "lags": self.lags,
         }
+        if meta:
+            out["meta"] = meta
+        return out
 
+    def import_hard(self, hard: dict) -> None:
+        """Inverse of export_hard -- re-derive soft logits from the integer
+        tables so the model resumes at exactly the accuracy point the
+        checkpoint was exported at.
+
+        Every integer table in the payload is the argmax of one soft-logit
+        tensor, so the inverse is a one-hot re-encode at +10.0 (well past the
+        +8.0 init bias used by the trainer, so the STE path is unambiguous).
+        ``coef`` needs care: its values are GF(256) *elements*, and the argmax
+        slot must point at the coef_set position whose *value* equals that
+        element, so we invert coef_set once and index through it.
+        """
+        if list(hard["lags"]) != list(self.lags):
+            raise ValueError(
+                f"import_hard: lag mismatch. checkpoint lags={hard['lags']} "
+                f"model lags={self.lags}"
+            )
+        device = self.emb_logits.device
+        d = self.d
+        K = len(self.coef_set)
+        coef_index_of = {int(self.coef_set[i]): i for i in range(K)}
+
+        # --- emb_logits: (256, d, 256) indexed [token, j, glyph].
+        emb_arg = hard["emb"].to(device).long()
+        if emb_arg.shape != (256, d):
+            raise ValueError(f"emb shape {tuple(emb_arg.shape)} != (256,{d})")
+        new_emb = torch.zeros_like(self.emb_logits)
+        ar256 = torch.arange(256, device=device)
+        ar_d = torch.arange(d, device=device)
+        new_emb[ar256.unsqueeze(1), ar_d.unsqueeze(0), emb_arg] = 10.0
+        self.emb_logits.data.copy_(new_emb)
+
+        # --- coef_logits: (d, fan_in, K), argmax slot = coef_set index.
+        for i, (L, idx) in enumerate(zip(self.layers, hard["coef"])):
+            idx_t = idx.to(device).long()
+            fan_in = idx_t.shape[1]
+            if L.coef_logits.shape[1] != fan_in:
+                raise ValueError(
+                    f"import_hard: layer {i} fan_in {L.coef_logits.shape[1]} "
+                    f"!= payload {fan_in}"
+                )
+            pos = torch.empty_like(idx_t)
+            flat_pos, flat_val = pos.view(-1), idx_t.view(-1).tolist()
+            for k, v in enumerate(flat_val):
+                if int(v) not in coef_index_of:
+                    raise ValueError(
+                        f"import_hard: layer {i} coef value {v} not in "
+                        f"model coef_set {list(self.coef_set)}"
+                    )
+                flat_pos[k] = coef_index_of[int(v)]
+            new_cl = torch.zeros(d, fan_in, K, device=device)
+            new_cl.scatter_(2, pos.unsqueeze(2), 10.0)
+            L.coef_logits.data.copy_(new_cl)
+
+        # --- sbox_logits: (d, 256, 256) -- a full table per dimension, where
+            # argmax over the last axis for input glyph x yields the output glyph.
+            # The payload stores that table directly as (d, 256).
+            for i, (L, sbox_idx) in enumerate(zip(self.layers, hard["sbox"])):
+                sbox_t = sbox_idx.to(device).long()
+                if sbox_t.shape != (d, 256):
+                    raise ValueError(
+                        f"import_hard: layer {i} sbox shape {tuple(sbox_t.shape)} "
+                        f"!= ({d}, 256)"
+                    )
+                new_sl = torch.zeros_like(L.sbox_logits)
+                new_sl[ar_d.unsqueeze(1), ar256.unsqueeze(0), sbox_t] = 10.0
+                L.sbox_logits.data.copy_(new_sl)
+
+        # --- wiring (ch, lag): registered buffers on each layer.
+        for i, (L, wiring) in enumerate(zip(self.layers, hard["wiring"])):
+            ch_t, lg_t = wiring
+            if ch_t.shape != L.ch.shape or lg_t.shape != L.lag.shape:
+                raise ValueError(
+                    f"import_hard: layer {i} wiring shape mismatch "
+                    f"ch={tuple(ch_t.shape)} vs {tuple(L.ch.shape)}, "
+                    f"lag={tuple(lg_t.shape)} vs {tuple(L.lag.shape)}"
+                )
+            L.ch = ch_t.to(device).long()
+            L.lag = lg_t.to(device).long()
+            L.lag_vals = torch.tensor(
+                self.lags, device=device, dtype=torch.long
+            )[L.lag]
+
+        # --- readout / bias: exact copies.
+        if len(hard["readout"]) != len(self.readout):
+            raise ValueError(
+                f"import_hard: readout count {len(hard['readout'])} != "
+                f"{len(self.readout)}"
+            )
+        for i, (R, R_new) in enumerate(zip(self.readout, hard["readout"])):
+            R_new = R_new.to(R.device)
+            if R.shape != R_new.shape:
+                raise ValueError(
+                    f"import_hard: readout[{i}] shape "
+                    f"{tuple(R.shape)} != {tuple(R_new.shape)}"
+                )
+            R.data.copy_(R_new)
+        bias_new = hard["bias"].to(self.readout_bias.device)
+        if bias_new.shape != self.readout_bias.shape:
+            raise ValueError(
+                f"import_hard: bias shape {tuple(bias_new.shape)} != "
+                f"{tuple(self.readout_bias.shape)}"
+            )
+        self.readout_bias.data.copy_(bias_new)
     @torch.no_grad()
     def hard_forward(self, tokens, hard):
         exp_t, log_t = torch.tensor(EXP), torch.tensor(LOG)
@@ -207,6 +331,13 @@ class GFMarkovLM(nn.Module):
                 out = torch.zeros(B, T, d, dtype=torch.long)
                 for j in range(d):
                     l = int(lags[lg[j, f]])
+                    # V7 can have lags up to 256, and callers may hand us a T
+                    # shorter than that (short prompts, ragged eval batches). Then
+                    # `src[:, :-l]` is (B, 0) and the cat below inflates the row
+                    # to width l, which no longer matches `out[:, :, j]` of width
+                    # T. Clamp so the leading pad never exceeds the actual T.
+                    if l > T:
+                        l = T - 1 if T > 1 else 0
                     src = h[:, :, ch[j, f]]
                     if l: src = torch.cat([torch.zeros(B, l, dtype=torch.long), src[:, :-l]], 1)
                     c = int(coef[j, f])
