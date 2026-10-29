@@ -283,6 +283,12 @@ else
   echo "  (skipped: no python on PATH)"
 fi
 
+# The import-integrity check above compiles the staged package, which
+# writes __pycache__ INTO the staged tree. Remove it AFTER the check, not
+# only before it, or the published repo ships .pyc files.
+find "$TARGET" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+find "$TARGET" -name '*.pyc' -type f -delete 2>/dev/null || true
+
 echo "=== staged tree ==="
 find . -type f -not -path './.git/*' | sort | sed 's|^\./||'
 echo
