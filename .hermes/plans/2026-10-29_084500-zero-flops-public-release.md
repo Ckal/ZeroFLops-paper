@@ -95,68 +95,35 @@ below sets up the experiment that tests it directly.
 Nothing publishes until this phase is done. Its job is to make every later
 number checkable.
 
-### Task 1.1 — Run the never-executed session unit test
+### Task 1.1 — Run the never-executed session unit test — ✅ DONE 08:37
 
 **Objective:** close blocker B2 before anything ships on the new server code.
 
-```bash
-cd C:/Users/Chris4K/projects/ZeroFLops-paper
-./.venv-c4/Scripts/python.exe -u tmp/test_sessions_unit.py
-```
-Expected: `ALL PASS`, `N/N checks passed`. The test covers id opacity,
-malformed-id rejection, TTL expiry, activity-refreshes-TTL, rate budget, LRU
-eviction, and stats.
+**RESULT:** the test **failed 3/46 on first run** and exposed two real product
+bugs plus one test bug. All fixed; now **47/47 PASS**.
 
-**If it fails:** fix `src/c4/sessions.py` (the likely culprit is the `_hits`
-key for a malformed id) and re-run. Commit:
-`git add tmp/test_sessions_unit.py src/c4/sessions.py && git commit -m "test(c4): cover the session store: TTL, rate budget, LRU"`
+| Failure | Kind | Fix |
+|---|---|---|
+| "session is gone after the TTL" | **real bug** | `get()` never checked the TTL — expiry was only enforced by the background sweeper, so a session could be revived between expiry and the next sweep. `get()` now treats an idle session as gone and drops it. |
+| "parser reads the session" | **real bug** | a repeated cookie name resolved to the **last** value, letting a broader-scoped cookie override the session cookie. RFC 6265 sends the most specific path first → the **first** value now wins. |
+| "sweep reports the expired session" | test bug | `get()` had already evicted the session, so the sweeper correctly found nothing. The test now exercises the sweeper on its own session. |
 
-### Task 1.2 — Fix the reload/new-session agent closure (B3)
+Committed in `b286aee`.
+
+### Task 1.2 — Fix the reload/new-session agent closure (B3) — ✅ DONE 08:37
 
 **Objective:** a session created *after* a hot reload must use the new model.
 
-**Files:** `src/c4/ui_server.py` — `main()`'s `_new_game` closure.
+**Fix applied:** a module global `_CURRENT_AGENT` replaces the closure over the
+startup agent.
 
-**Problem:** the closure captures `agent` from startup scope. After
-`_reload_agent` swaps the model into existing sessions, a *new* visitor still
-gets the startup model.
+- `main()` sets `_CURRENT_AGENT = agent` at startup.
+- `_reload_agent` sets `_CURRENT_AGENT = agent` **before** swapping sessions, so
+  a session created concurrently picks up the new model.
+- `_new_game()` reads `_CURRENT_AGENT`.
 
-**Fix:** make the factory read the *current* agent from a module global rather
-than a closure variable.
-
-```python
-# module level, near the other globals
-_CURRENT_AGENT: Any = None
-```
-
-In `main()`:
-```python
-global _CURRENT_AGENT
-_CURRENT_AGENT = agent
-```
-
-```python
-def _new_game():
-    # Read the CURRENT agent, not the startup one: a session created
-    # after a hot reload must play against the new checkpoint.
-    return Game(_CURRENT_AGENT, model_name=model_name)
-```
-
-In `_reload_agent`, after a successful load:
-```python
-global _CURRENT_AGENT
-_CURRENT_AGENT = agent
-```
-
-**Verify:**
-```bash
-./.venv-c4/Scripts/python.exe -c "import ast;ast.parse(open('src/c4/ui_server.py',encoding='utf-8').read());print('SYNTAX OK')"
-```
-Then extend `tmp/test_ui_hot_reload.py` with one case: start the server on
-checkpoint A, `GET /reload` onto checkpoint B, then create a NEW visitor and
-assert its `/probs` match checkpoint B's, not A's.
-
-**Commit:** `git commit -m "fix(c4): new sessions after a hot reload use the new model"`
+**Still to verify:** extend `tmp/test_ui_hot_reload.py` with the case "reload to
+checkpoint B, then a NEW visitor's `/probs` must match B". Not yet written.
 
 ### Task 1.3 — Test whether "newer" plays better than "better-scoring"
 
@@ -667,13 +634,82 @@ namespace decision, G5 needs the hostname decision, and G7 needs the real URLs.
 
 ## Immediate next actions (in order)
 
-1. `tmp/test_sessions_unit.py` — run it (never executed). **5 min**
-2. Fix the reload/new-session closure (B3). **15 min**
-3. 200-game strength matrices for steps 20000 and 40000. **~40 min**
-4. Reconcile every number into `release/RELEASE_RECORD.md`. **30 min**
-5. Freeze the artifact + hash. **10 min**
-6. Full regression sweep against the new code. **~30 min**
-7. Restart 7860/7861 on the new code. **10 min**
-8. Commit the session work. **5 min**
-9. Switch `gh` to `Ckal`; stage and verify the release tree. **45 min**
-10. **Ask the user:** HF namespace handle + public hostname. Then G3→G7.
+| # | Action | Status |
+|---|---|---|
+| 1 | `tmp/test_sessions_unit.py` — run it | ✅ **47/47** — found 2 real bugs, both fixed |
+| 2 | Fix the reload/new-session closure (B3) | ✅ code fixed; test case still to write |
+| 3 | 200-game strength matrix for step 20000 | 🔄 running (`proc_117ae5eece0a`) |
+| 4 | 200-game strength matrix for step 40000 | ⏳ after #3 |
+| 5 | Reconcile every number into `release/RELEASE_RECORD.md` | ⏳ needs #3/#4 |
+| 6 | Freeze the artifact + SHA-256 | ⏳ needs #5 |
+| 7 | Full regression sweep against the new code | ⏳ needs #2's test case |
+| 8 | Restart 7860/7861 on the new code | ⏳ needs #7 |
+| 9 | Commit the session work | ✅ `b286aee` |
+| 10 | Switch `gh` to `Ckal`; stage + verify the release tree | ⏳ after #7 |
+| 11 | **Ask the user:** HF namespace handle + public hostname | 🔴 blocking G3/G4/G5 |
+
+### Two questions only the user can answer
+
+**Q1 — Hugging Face namespace.** The `ckal` HF account is **Bob Kaleugher**, a
+different person. The locally authenticated account is `AlexChen1403`, which is
+the wrong identity for a Christof-attributed release. Options:
+(a) an existing Christof-owned HF handle, (b) register a new one (needs an email
+confirmation in a browser), (c) publish privately under the authenticated
+account as a labelled fallback.
+
+**Q2 — public hostname.** Proposed `play.tensorgarten.de` → 159.195.150.113.
+`*.tensorgarten.de` already resolves there and the host runs Docker + Nginx,
+but the exact vhost layout must be inspected before anything is added.
+
+---
+
+## Answers to the questions asked
+
+**"Is it still all running and improving?"**
+
+*Still running:* yes — the trainer is alive at **step 41,620 / 100,000**, ~0.42
+s/step, ETA ≈ 6.9 h.
+
+*Still improving:* **no, not in a way that changes the release.** The label
+agreement is flat:
+
+```
+step 18000  LABEL 59.55   H-LABEL 41.02
+step 20000  LABEL 59.00   H-LABEL 38.87
+step 22000  LABEL 58.52   H-LABEL 40.82
+step 24000  LABEL 58.55   H-LABEL 40.43
+step 26000  LABEL 58.70   H-LABEL 39.06
+step 28000  LABEL 58.80   H-LABEL 40.82
+step 30000  LABEL 59.40   H-LABEL 41.99
+step 32000  LABEL 58.85   H-LABEL 42.19
+step 34000  LABEL 58.55   H-LABEL 41.80
+step 36000  LABEL 58.58   H-LABEL 37.50
+step 38000  LABEL 59.33   H-LABEL 39.45
+step 40000  LABEL 59.00   H-LABEL 40.82
+```
+
+Ten consecutive evaluations, no improvement. The holdout metric peaked at
+**42.19 %** at step 32,000 — also flat. Against the 1-ply heuristic the model
+is **net negative at every single evaluation** (best case 23-25 at step 12,000,
+now 17-31).
+
+*This is a real research finding, not a failure to report as such:* teacher
+agreement saturates near 60 % on this corpus and stops converting into game
+strength. That is precisely the thesis `release/FOLLOWUP_PLAN.md` was written
+to investigate. The paper's contribution is the **measurement of the gap**,
+not the score.
+
+**"New version to play against?"**
+
+| Port | Checkpoint | LABEL | Use it? |
+|---|---|---|---|
+| **7860** | step **18000** (promoted) | **59.55 %** | ✅ **yes — this is the best one** |
+| 7861 | step 20000 | 59.00 % | ❌ worse; kept only for the documented A/B |
+
+**There is no better new version to play.** Steps 36k/38k/40k all score *below*
+step 18,000. The honest answer is: the model at `:7860` is already the one to
+play, and more training is not producing a stronger opponent.
+
+**Caveat:** both running servers predate the session-isolation refactor (they
+still run the old shared-global code). They are fine for private play but must
+be restarted on the new code before anything public — Task 2.3.
