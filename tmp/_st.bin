@@ -1,0 +1,12 @@
+v7mixed_v18_seed32  runs\c4\v7mixed_v18_seed32
+  step          1500 / 1500    (116.1 steps/min)
+  eta         ?
+  accuracy    hard 6.96% (+0.00)   soft 5.74%
+  LEGAL acc   16.17%   <- 7-way, the trained objective
+  HOLDOUT opt 30.73%   <- held-out, ties count correct   THE metric
+  bpb         hard 15.709   soft 13.746
+  vs heur     W237 L563 D0  / 800
+  vs random   W656 L133 D11  / 800
+  vs ref      W186 L214 D0  / 400
+  corpus      106966 rows, 106966 examples
+  note        holdout optimal-move acc is the decision metric; bpb and LEGAL are in-sample diagnostics.

@@ -1,0 +1,1 @@
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*ui_server*' -or $_.CommandLine -like '*play_v24*' -or $_.CommandLine -like '*src.c4.train*' -or $_.CommandLine -like '*wtest*' } | Select-Object ProcessId,Name | Format-Table -AutoSize | Out-String

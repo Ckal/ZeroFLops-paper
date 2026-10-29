@@ -16,6 +16,7 @@ Run with the server already listening:
 from __future__ import annotations
 
 import argparse
+import http.cookiejar
 import json
 import sys
 import urllib.error
@@ -23,6 +24,15 @@ import urllib.request
 
 LETTERS = "ABCDEFG"
 FAILS: list[str] = []
+
+# The server is session-scoped: each visitor gets an opaque session id in a
+# cookie, and each session owns its own board. A test that makes several
+# requests WITHOUT carrying the cookie therefore sees a brand-new empty
+# board on every request -- which looks exactly like a broken server.
+# Every request in this test must go through one shared opener that keeps
+# the cookie jar, so all requests hit the SAME session.
+_JAR = http.cookiejar.CookieJar()
+_OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_JAR))
 
 
 def req(method: str, url: str, body: dict | None = None) -> dict:
@@ -33,7 +43,7 @@ def req(method: str, url: str, body: dict | None = None) -> dict:
         headers["Content-Type"] = "application/json"
     r = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(r, timeout=60) as resp:
+        with _OPENER.open(r, timeout=60) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         raw = e.read().decode("utf-8")
