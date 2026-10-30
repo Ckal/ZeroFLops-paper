@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Mirror training data left-right to enforce spatial invariance.
+"""DEPRECATED / BROKEN: do not use. It writes a corrupt corpus (5.7M lines
+for 640k games). Use src/c4/mirror.py and corpus_320k_mirror_v3.txt instead.
+
+Mirror training data left-right to enforce spatial invariance.
 
 Connect Four is perfectly symmetric: flipping columns 0↔6, 1↔5, 2↔4
 creates an equivalent game with identical win/loss outcomes but different

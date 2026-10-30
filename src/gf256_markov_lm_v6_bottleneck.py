@@ -2,8 +2,10 @@
 gf256_markov_lm_v6_bottleneck.py -- V6 with bottleneck readout (fixes memorization)
 
 Key changes from original gf256_markov_lm_v6.py:
-1. Replaced (layers+1) × 8.38M param lookup tables with single ~1M MLP bottleneck
-   forces the GF(256) trunk to learn compressed representations instead of bypassing
+1. Replaced the (layers+1) per-layer (d,256,256) float readout tables (8.39M params,
+   one table per trunk depth INCLUDING the embedding) with ONE MLP that reads only
+   the LAST trunk layer (d*256 -> 512 -> 256, 4.3M params). Early-layer shortcuts are
+   gone, so depth must carry the information.
 
 2. All GF(256) layers remain active in forward pass
 
@@ -157,14 +159,14 @@ class GFLayer(nn.Module):
 # Full Model: BOTTLENECK variant ────────────────────────────────────────────
 
 class GFMarkovLM(nn.Module):
-    """V6 with bottleneck readout: 8.38M → ~1.1M params (~87% reduction)
+    """V6 with bottleneck readout: readout 8.39M -> 4.3M params (~49% smaller)
     
     Original V6 used (layers+1) × d × 256 × 256 lookup tables that act as a
     memorization shortcut, bypassing the GF(256) trunk entirely for certain
     patterns. This bottleneck variant forces compression through an MLP:
     
     Input shape:   (B, T, d*256) = tokens after embedding + layers
-    MLP:           (d*256 → 128 → 256) with ReLU
+    MLP:           (d*256 -> 512 -> 256) with ReLU + dropout 0.1
     Output shape:  (B, T, 256) logits over next byte
     
     This preserves the full GF(256) computation graph while reducing params.
@@ -218,13 +220,8 @@ class GFMarkovLM(nn.Module):
 
         self.readout_bias = nn.Parameter(torch.zeros(256))
 
-        # Bigram initialization if provided [UNCHANGED]
-        if bigram_logp is not None:
-            with torch.no_grad():
-                # Initialize first MLP weights from bigram prior (heuristic)
-                B = bigram_logp.exp()  # convert to probabilities
-                avg_first = B[0].mean().item()
-                nn.init.constant_(self.readout_mlp[0].weight, avg_first / (d * 256))
+        # bigram_logp is accepted for API parity with V6 and ignored: a constant
+        # init would make every hidden unit identical (no symmetry breaking).
 
         self.ste = False
 

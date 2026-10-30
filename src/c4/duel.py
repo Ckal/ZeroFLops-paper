@@ -86,7 +86,11 @@ def _load_hard_agent(ckpt_path: str) -> Agent:
         raw = torch.load(ckpt_path, map_location="cpu", weights_only=False)
         payload = raw["model"] if isinstance(raw, dict) and "model" in raw else raw
         d = int(payload["emb"].shape[1])
-        cls = GFMarkovLM_V7 if d >= 64 else GFMarkovLM_V6
+        if "readout_mlp" in payload:
+            from ..gf256_markov_lm_v6_bottleneck import GFMarkovLM as GFMarkovLM_V6B
+            cls = GFMarkovLM_V6B
+        else:
+            cls = GFMarkovLM_V7 if d >= 64 else GFMarkovLM_V6
         model = cls(d=d, layers=len(payload["coef"]),
                     fan_in=int(payload["coef"][0].shape[1]),
                     lags=tuple(int(x) for x in payload["lags"]))

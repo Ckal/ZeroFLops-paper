@@ -215,6 +215,8 @@ def main() -> int:
                 layers = len(payload["coef"])
                 fan_in = int(payload["coef"][0].shape[1])
                 lags = tuple(int(x) for x in payload["lags"])
+                if "readout_mlp" in payload:
+                    from src.gf256_markov_lm_v6_bottleneck import GFMarkovLM as V6
                 cls = V7 if d >= 64 else V6
                 mdl = cls(d=d, layers=layers, fan_in=fan_in, lags=lags)
                 mdl.eval()

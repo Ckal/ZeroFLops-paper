@@ -71,6 +71,7 @@ from src.c4.sessions import (  # noqa: E402
 )
 from src.gf256_markov_lm_v6 import GFMarkovLM as GFMarkovLM_V6  # noqa: E402
 from src.gf256_markov_lm import GFMarkovLM as GFMarkovLM_V7  # noqa: E402
+from src.gf256_markov_lm_v6_bottleneck import GFMarkovLM as GFMarkovLM_V6B  # noqa: E402
 
 
 # Outcome names are RELATIVE TO THE HUMAN, so they depend on the seat:
@@ -554,7 +555,10 @@ def _load_agent(ckpt_path: str, device: str = "cpu") -> Agent:
     lags = tuple(int(x) for x in payload["lags"])
     fan_in = int(payload["coef"][0].shape[1])
 
-    cls = GFMarkovLM_V7 if d >= 64 else GFMarkovLM_V6
+    if "readout_mlp" in payload:
+        cls = GFMarkovLM_V6B
+    else:
+        cls = GFMarkovLM_V7 if d >= 64 else GFMarkovLM_V6
     model = cls(d=d, layers=layers, fan_in=fan_in, lags=lags)
 
     hard = hard_to_cpu(payload)
@@ -753,6 +757,16 @@ _SESSIONS: SessionStore | None = None
 # Set by main(): when True the session cookie carries the `Secure`
 # attribute, because the site is then served over HTTPS.
 _COOKIE_SECURE = False
+# Set by main(): the set of origins allowed to send state-changing
+# requests. It contains the site's own origin plus every allowlisted
+# embedding origin (a framed game is a cross-origin request by
+# definition, so the embedding parents have to be trusted too).
+_ALLOWED_ORIGINS: set[str] = set()
+# Set by main(): the SameSite policy of the session cookie. "Lax" is the
+# default; it becomes "None" when the game is embedded in a frame on
+# another site, because a Lax cookie is NOT sent on a cross-site
+# subresource request and every framed request would start a new game.
+_COOKIE_SAMESITE = "Lax"
 # Set by main(): when True, visitors are rate limited per session.
 _RATE_LIMIT = True
 # Set by main(): a background sweeper drops idle sessions.
@@ -871,7 +885,8 @@ class Handler(BaseHTTPRequestHandler):
         if new_sid:
             self.send_header("Set-Cookie", session_cookie(
                 new_sid, secure=_COOKIE_SECURE,
-                max_age=int(DEFAULT_SESSION_TTL_S)))
+                max_age=int(DEFAULT_SESSION_TTL_S),
+                samesite=_COOKIE_SAMESITE))
         self.end_headers()
         self.wfile.write(body)
 
@@ -962,7 +977,31 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_error(HTTPStatus.NOT_FOUND, "unknown GET")
 
+    def _origin_allowed(self) -> bool:
+        """True when a state-changing request comes from a trusted origin.
+
+        `SameSite=Lax` used to make a cross-site POST impossible: the
+        browser withheld the session cookie. When the game is framed on
+        another site the cookie must be `SameSite=None`, which removes
+        that implicit protection -- so the check has to be explicit.
+
+        A request WITHOUT an `Origin` header is allowed: that is a
+        non-browser client (curl, the test-suite, a server-side call),
+        which cannot be ridden by a hostile page in the first place.
+        A request WITH an `Origin` must name either the site itself or
+        one of the explicitly allowlisted embedding origins.
+        """
+        origin = self.headers.get("Origin")
+        if not origin:
+            return True
+        if origin in _ALLOWED_ORIGINS:
+            return True
+        return False
+
     def do_POST(self) -> None:  # noqa: N802
+        if not self._origin_allowed():
+            self._send_json(403, {"error": "origin not allowed"})
+            return
         if self.path.startswith("/reload") or self.path.startswith("/modelinfo"):
             if not _ALLOW_ADMIN:
                 self._send_json(403, {"error": "forbidden"})
@@ -1060,7 +1099,7 @@ def main() -> int:
         return 2
 
     global _COOKIE_SECURE, _RATE_LIMIT, _ALLOW_ADMIN, _SESSIONS
-    global _FRAME_ANCESTORS
+    global _FRAME_ANCESTORS, _COOKIE_SAMESITE, _ALLOWED_ORIGINS
     _COOKIE_SECURE = bool(args.public)
     if args.cookie_secure == "yes":
         _COOKIE_SECURE = True
@@ -1086,9 +1125,36 @@ def main() -> int:
                   file=sys.stderr)
             return 2
     _FRAME_ANCESTORS = origins
+    # The site's own origin is always trusted, plus every embedding
+    # origin (the framed parents that legitimately drive the game).
+    _ALLOWED_ORIGINS.clear()
+    _ALLOWED_ORIGINS.add("https://c4.tensorgarten.de")
+    _ALLOWED_ORIGINS.update(origins)
     if _FRAME_ANCESTORS:
         print("ui_server: embedding allowed for: "
               + ", ".join(_FRAME_ANCESTORS), file=sys.stderr)
+
+    # --- session cookie policy ----------------------------------------
+    # A `SameSite=Lax` cookie is NOT sent on a cross-site subresource
+    # request. In an iframe on another site (the Hugging Face Space, or
+    # the HF viewer wrapping that Space) the browser would therefore drop
+    # the session id on every request: the board would render, but each
+    # move would arrive without a session and the game would reset.
+    # `SameSite=None` is the only value that survives a cross-site
+    # iframe, and browsers only accept it together with `Secure`.
+    # So: only relax the policy when the site is actually framed, and
+    # only when the cookie is already Secure (which `--public` sets).
+    if _FRAME_ANCESTORS:
+        if not _COOKIE_SECURE:
+            print("ui_server: embedding requested but the cookie is not "
+                  "Secure; keeping SameSite=Lax (a framed game would not "
+                  "keep its session)", file=sys.stderr)
+        else:
+            _COOKIE_SAMESITE = "None"
+    else:
+        _COOKIE_SAMESITE = "Lax"
+    print(f"ui_server: session cookie SameSite={_COOKIE_SAMESITE}",
+          file=sys.stderr)
 
     # The default request_queue_size is 5. The live-parity sweep fires
     # requests back-to-back (GET /state, POST /move, GET /state, ...) with
@@ -1114,7 +1180,7 @@ def main() -> int:
         # same address. The visible symptom was a STALE ui_server from an
         # earlier session silently shadowing the freshly started one:
         #
-        #   * both processes printed "ui_server: serving http://127.0.0.1:7860/"
+        #   * both processes printed "ui_server: serving http://127.0.0.1/"
         #   * netstat showed many ESTABLISHED/WARTEND (LISTENING) rows for
         #     the same port, each owned by a different PID
         #   * requests were served by the OLD process, so /modelinfo lacked

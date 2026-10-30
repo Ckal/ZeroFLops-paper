@@ -117,18 +117,19 @@ trap cleanup EXIT INT TERM
 echo "lock acquired: $LOCK"
 
 # ---- the artifacts must exist and be clean before we start ----
-CORPUS=runs/_probe/perply_v23_full/corpus_320k_fixed.txt
-SIDECAR=runs/_probe/perply_v23_full/merged_repaired.npz
+CORPUS=${V24_CORPUS:-runs/_probe/perply_v23_full/corpus_320k_fixed.txt}
+SIDECAR=${V24_SIDECAR:-runs/_probe/perply_v23_full/merged_repaired.npz}
+ARCH=${V24_ARCH:-v6}
 for f in "$CORPUS" "$SIDECAR"; do
   [ -f "$f" ] || { echo "FATAL: missing $f"; exit 1; }
 done
 
 # ---- the corpus must pass the integrity gate before any GPU is touched ----
-$PY - <<'EOF'
+$PY - <<EOF
 import sys
 sys.path.insert(0, '.')
 from src.c4.corpus_integrity import assert_corpus_consistent
-r = assert_corpus_consistent("runs/_probe/perply_v23_full/corpus_320k_fixed.txt",
+r = assert_corpus_consistent("$CORPUS",
                               context="pre-flight")
 print(f"PRE-FLIGHT OK: {r['rows_checked']} rows, 0 violations")
 EOF
@@ -189,7 +190,7 @@ COMMON="--load-corpus --transcript v2 --move-loss 7way --soft-w 1.0 \
   --selfplay-games 0 --teacher-games 0 --selfplay-every 1000000 \
   --hard-start 0 --hard-ramp 1000 --hard-w 0.5 --table-bias 0.0 \
   --lags $DENSE --col-prior 0.0 \
-  --lr-schedule ${V24_LR_SCHEDULE:-none} \
+  --arch $ARCH --lr-schedule ${V24_LR_SCHEDULE:-none} \
   --ema-decay ${V24_EMA_DECAY:-0.0} --keep-last ${V24_KEEP_LAST:-3} \
   $HOLD_FLAGS"
 
