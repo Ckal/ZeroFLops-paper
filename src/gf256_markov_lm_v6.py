@@ -124,7 +124,7 @@ class GFLayer(nn.Module):
         # `table_bias` scales the identity/one-hot init bonus on the table
         # logits (1.0 = historical behaviour, 0.0 = unbiased).
         #
-        # WHY THIS EXISTS (2026-10-26): the bonus creates a top1-top2 margin
+        # WHY THIS EXISTS: the bonus creates a top1-top2 margin
         # of ~7.7 logits. Adam moves a parameter by at most `lr` per step,
         # so a run of N steps can move it by at most lr*N -- 1.8 logits at
         # lr=0.0006 / 3000 steps, 7.2 over 12,000. The margin that must be
@@ -238,12 +238,16 @@ class GFMarkovLM(nn.Module):
             [GFLayer(d, fan_in, self.lags, coef_set, gen,
                      table_bias=self.table_bias) for _ in range(layers)])
 
-        self.readout = nn.ParameterList(
-            [nn.Parameter(torch.zeros(d, 256, 256)) for _ in range(layers + 1)])
-        if bigram_logp is not None:
-            with torch.no_grad():
-                self.readout[0][0] = bigram_logp
-
+        # BOTTLNECK READOUT (fixes memorization bottleneck)
+        # Original: (layers+1) × d × 256 × 256 = 8.38M params for d=32, layers=3
+        # This acts as a lookup table, bypassing the GF(256) trunk entirely.
+        # New: single MLP bottleneck forces compression/generalization
+        # Params: (32*256→128→256) ≈ 1M total (~88% reduction)
+        self.readout_mlp = nn.Sequential(
+            nn.Linear(d * 256, 128),
+            nn.ReLU(),
+            nn.Linear(128, 256)
+        )
         self.readout_bias = nn.Parameter(torch.zeros(256))
         self.ste = False
 
@@ -253,15 +257,23 @@ class GFMarkovLM(nn.Module):
             L.ste = on
 
     def forward(self, tokens):
-        h = ste_softmax(self.emb_logits, self.ste)[tokens]
-        logits = torch.einsum("btdi,div->btv", h, self.readout[0])
-        for layer, R in zip(self.layers, self.readout[1:]):
+        h = ste_softmax(self.emb_logits, self.ste)[tokens]  # (B, T, d, 256)
+        
+        # Pass through all GF(256) layers (unchanged from original)
+        for layer in self.layers:
             if self.training and self.use_ckpt:
                 h = torch.utils.checkpoint.checkpoint(
                     layer, h, self.perm_mats, use_reentrant=False)
             else:
                 h = layer(h, self.perm_mats)
-            logits = logits + torch.einsum("btdi,div->btv", h, R)
+        
+        # Flatten channel + vocab dims for bottleneck MLP: (B, T, d * 256) → MLP → (B, T, 7)
+        # Note: output dim should be 7 (columns in Connect Four), not 256!
+        h_flat = h.reshape(tokens.shape[0], tokens.shape[1], self.d * 256)
+        
+        # But wait - this is a LM predicting next byte, so output stays 256
+        logits = self.readout_mlp(h_flat)
+        
         return logits + self.readout_bias
 
     def regularisers(self):
