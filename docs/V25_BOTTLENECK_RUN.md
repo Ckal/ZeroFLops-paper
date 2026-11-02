@@ -108,3 +108,29 @@ HOLDOUT 36.2% at 20k, 34.7% at 40k; LABEL ~59% plateau.
 - Plateau by ~16-18k steps, matching the V6 observation; further training only overfits.
 - Conclusion: the "force reasoning via bottleneck" hypothesis is not supported. V6b is
   worse than V6 on holdout. Keep V6 as the reference.
+
+
+## Game-play comparison (V6 `v24/best_hard` vs V6b `v25b/best_hard`)
+
+200 games each, hard (integer) policy, opponent eps=0.15, model eps=0.05, both colours.
+Score = (wins + 0.5 draws) / games for the model.
+
+| opponent | V6 (v24) | V6b (v25b) |
+|---|---|---|
+| random | 86.0% | 72.8% |
+| centre | 87.5% | 33.5% |
+| heuristic | 29.5% | 15.0% |
+| lookahead (win/block 1-ply+) | 15.5% | 4.5% |
+| minimax | 22.0% | 16.5% |
+| **head-to-head** (V6 as A, eps 0.1) | **78.2%** (154-41) | 21.8% |
+
+### Reading
+- V6b is clearly weaker than V6 on every opponent and loses head-to-head 41-154.
+- V6b loses 27% of games against a random mover and 95% against the simple lookahead
+  opponent, so it does not reliably play even "win if you can / block if you must".
+  V6 is also far from solved (15% vs lookahead), but is a full tier above.
+- Train LABEL 63% vs holdout 29.6% (V6: ~59% vs ~36%): the extra train fit does not transfer.
+  Params (12.7M) are comparable to the number of training positions (~12M), so
+  memorisation is possible; the flat holdout and rising bpb are consistent with
+  memorisation rather than learned tactics. (Not proven; no leave-out ablation was run.)
+- Not evaluated: the model+rule wrapper idea; per-tactic position accuracy.
