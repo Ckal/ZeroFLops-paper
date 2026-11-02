@@ -81,3 +81,30 @@ supported by this architecture.
 
 1. Longer run if the curve is still climbing.
 2. Model + rule wrapper ("win if you can, block if you must") vs rule alone.
+
+
+## Results (run finished, 80,000 steps, ~23.9 h)
+
+| step | soft bpb | hard bpb | HOLDOUT | LABEL | H-LABEL |
+|---|---|---|---|---|---|
+| 0 | 8.03 | 8.02 | 26.1% | 29.4% | 28.5% |
+| 2000 | 6.77 | 7.26 | 28.6% | 49.8% | 29.1% |
+| 10000 | 7.68 | 10.21 | 28.5% | 55.5% | 25.8% |
+| 18000 | 9.05 | 10.53 | 28.1% | 60.6% | 26.4% |
+| 32000 (best LABEL) | 13.10 | 11.45 | 29.6% | 63.3% | 25.4% |
+| 40000 | 13.94 | 11.41 | 29.2% | 61.2% | 24.0% |
+| 80000 | 14.16 | 13.20 | 29.8% | 58.0% | 27.5% |
+
+Independent scorer: `best_hard.pt` (step 32000) LABEL 63.30%; final 58.02%.
+
+V6 baseline (`runs/_probe/v24.log`, different logging, check corpus parity before strict comparison):
+HOLDOUT 36.2% at 20k, 34.7% at 40k; LABEL ~59% plateau.
+
+### Verdict
+- Bottleneck readout does NOT generalise better. HOLDOUT stays 28-30% (V6: 35-36%).
+  Train LABEL rises 50% -> 63% (memorisation) while H-LABEL is flat/noisy ~25-28%.
+- bpb diverges upward after ~6k steps (soft 6.76 -> 14+): the byte-level loss gets worse
+  while label accuracy improves; the MLP readout is trading LM quality for label fit.
+- Plateau by ~16-18k steps, matching the V6 observation; further training only overfits.
+- Conclusion: the "force reasoning via bottleneck" hypothesis is not supported. V6b is
+  worse than V6 on holdout. Keep V6 as the reference.
