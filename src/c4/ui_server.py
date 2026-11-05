@@ -606,7 +606,10 @@ def _load_agent(ckpt_path: str, device: str = "cpu") -> Agent:
     # column_logits() path; ``choose(use_hard=True)`` -- what the live game
     # calls -- reads ``agent.hard`` directly and never touches the float
     # buffers. Skipping it is correct V6 serving, not a degraded fallback.
-    if hasattr(agent.model, "import_hard"):
+    # Hand-compiled payloads (tools/compile_tactics.py) are integer-only: their
+    # coefficients are not in the float model's coef_set, so the soft import
+    # would reject them. They are served through the hard path only.
+    if hasattr(agent.model, "import_hard") and not hard.get("tactics_compiled"):
         agent.model.import_hard(hard)
     # Serving the float column_logits() path requires the parameters on
     # the same device as the prompt tokens, so move it explicitly.
