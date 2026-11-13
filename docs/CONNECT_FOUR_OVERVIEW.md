@@ -1,6 +1,6 @@
 # Connect Four — the whole thing, in one page
 
-**Date:** 26 Oct 2026 (night) · **Folder:** `C:\Users\Chris4K\projects\ZeroFLops-paper`
+**Date:** 26 Oct 2026 (night) · **Folder:** `<repo>`
 
 > **Note:** §1 and §7 describe the *early* project (V10/V11 era). Three
 > more serious bugs were found after that and are the real story — see

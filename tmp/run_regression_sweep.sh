@@ -68,6 +68,20 @@ PASS=0; FAIL=0; FAILED=""
 # afterwards.  That makes the sweep self-contained and reproducible.
 UI_PORT="${SWEEP_UI_PORT:-7860}"
 UI_CKPT="${SWEEP_UI_CKPT:-runs/_probe/fd_a_s6000/checkpoints/step6000_hard.pt}"
+
+# The interpreter is detected, not hardcoded: the Windows venv path
+# (./.venv-c4/Scripts/python.exe) does not exist on Linux CI, and a plain
+# `python3` does not exist on the Windows workstation.
+if [ -n "${SWEEP_PYTHON:-}" ]; then
+  PY="$SWEEP_PYTHON"
+elif [ -x "./.venv-c4/Scripts/python.exe" ]; then
+  PY="./.venv-c4/Scripts/python.exe"
+elif command -v python3 >/dev/null 2>&1; then
+  PY="python3"
+else
+  PY="python"
+fi
+echo "sweep: interpreter = $PY"
 UI_LOG="runs/_probe/_sweep_${SWEEP_ID}_ui_server.log"
 UI_PID=""
 stop_ui() {
@@ -106,7 +120,7 @@ if curl -s -o /dev/null -w '%{http_code}' --max-time 4 \
   exit 1
 fi
 
-PYTHONPATH="$PWD" ./.venv-c4/Scripts/python.exe -u -m src.c4.ui_server \
+PYTHONPATH="$PWD" "$PY" -u -m src.c4.ui_server \
     --model "$UI_CKPT" --port "$UI_PORT" --device cpu > "$UI_LOG" 2>&1 &
 UI_PID=$!
 ui_up=0
@@ -137,7 +151,7 @@ for t in tmp/test_*.py; do
   # silently measures a different model and reports a false mismatch.
   # UI_PORT is exported so the tests (which read os.environ) follow
   # the sweep's port.
-  UI_PORT="$UI_PORT" timeout 900 ./.venv-c4/Scripts/python.exe -u "$t" > "$out" 2>&1
+  UI_PORT="$UI_PORT" timeout 900 "$PY" -u "$t" > "$out" 2>&1
   rc=$?
   if [ $rc -eq 0 ]; then
     PASS=$((PASS+1)); echo "PASS  $name" >> "$LOG"

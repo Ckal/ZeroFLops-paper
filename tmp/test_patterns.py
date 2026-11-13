@@ -5,8 +5,8 @@ analysis). tg_block_test.win_cols is the EXISTING, already-trusted
 implementation (apply the move, ask is_win). They must agree on every
 reachable position, or the new module is wrong.
 """
-import sys, random, itertools
-ROOT = r"C:/Users/Chris4K/projects/ZeroFLops-paper"
+import sys, random, itertools, os
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from src.c4.board import Board, Outcome, P1, P2

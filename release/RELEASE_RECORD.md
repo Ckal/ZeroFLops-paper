@@ -37,6 +37,7 @@ If a number is not in this file, it is not publishable.
 | Blog | `ckaller.blogspot.de` | Blogger token present at `~/AppData/Local/hermes/google_token.json` |
 | LinkedIn | `de.linkedin.com/in/christof-kaller-6b043733` | profile found |
 | Hugging Face model | **`Chris4K/connect-four-gf256`** | **PUBLIC — live 2026-10-29**, anonymous read verified (HTTP 200). Published artifact's SHA-256 re-verified after download: `134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2` — byte-identical to the frozen release copy. |
+| Hugging Face Space | **`Chris4K/connect-four-gf256`** — https://huggingface.co/spaces/Chris4K/connect-four-gf256 | **PUBLIC — live 2026-10-29.** Static Space (`sdk: static`). It was the default HF/Nerfies template; it now holds a single page that frames the live server at `https://c4.tensorgarten.de`. Served at `https://chris4k-connect-four-gf256.static.hf.space/` (HTTP 200). The 274 template assets were removed; the page and its demo GIF are the only files. The demo GIF is stored in **Git LFS** (HF refuses raw binaries in a Space repo) and downloads byte-identical: SHA-256 `b249bb753f89b42090f5bf6987478f1694bd79d00f2e50b3759d213b6b22ff29`, 231,546 bytes. |
 | Hugging Face namespace | **`Chris4K`** — VERIFIED, write-tested | Email-verified `Christof.kaller@gmail.com`, fullname "CK". A repo was created and deleted under this namespace as a write probe. The `ckal` HF namespace belongs to **a different person** and must not be used. |
 
 > **HF namespace resolved.** The live `hf_hackathon_git` token authenticates as
@@ -428,7 +429,7 @@ PASSED: 19   FAILED: 0
 |---|---|
 | `GET /` returns 200 with a real page | PASS (28,234 bytes) |
 | Content-Security-Policy present | PASS |
-| `X-Frame-Options: DENY` | PASS |
+| Framing restricted to named origins (no wildcard) | PASS — `frame-ancestors https://chris4k-connect-four-gf256.static.hf.space` |
 | `X-Content-Type-Options: nosniff` | PASS |
 | `Referrer-Policy` present | PASS |
 | `Strict-Transport-Security` present | PASS |
@@ -461,6 +462,57 @@ published Hugging Face artifact:
 134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2
   /opt/netcup-infra/apps/c4-game/app/model/best_hard.pt
 ```
+
+---
+
+## 6.4 Embedding — the Hugging Face Space
+
+The public Space is **static**: it holds only a page that frames the live
+server. The game itself keeps running on `c4.tensorgarten.de`; the Space
+is a front end, not a second deployment.
+
+### The allowlist is explicit and closed
+
+The server takes a repeatable `--allow-embedding ORIGIN` flag. The
+deployed container is started with exactly one:
+
+```
+C4_ALLOW_EMBEDDING=https://chris4k-connect-four-gf256.static.hf.space
+```
+
+The rules the server enforces:
+
+| Rule | Why |
+|---|---|
+| Default is **deny** — `X-Frame-Options: DENY` and `frame-ancestors 'none'` | A directly-visited game has no reason to be framable. |
+| Only `https://` origins are accepted; the server exits 2 on anything else | An `http://` ancestor can be intercepted. |
+| `https://*` is refused outright | A wildcard `frame-ancestors *` would let any site clickjack the game. |
+| When an allowlist is in force, `X-Frame-Options` is dropped and CSP carries `frame-ancestors` | XFO can only express one origin; CSP can name several. |
+| `nginx-proxy`'s own `SECURITY_HEADERS_X_FRAME_OPTIONS: DENY` was removed for this service | The proxy header would have overridden the app's and blocked the Space regardless of the app-level allowlist. |
+
+The app sets its own framing header, so removing the proxy override does
+not weaken the default posture: with no flag the response still carries
+`X-Frame-Options: DENY`.
+
+### What was verified
+
+| Assertion | Result |
+|---|---|
+| Deployed response carries `frame-ancestors` naming the Space | PASS |
+| Deployed response carries **no** wildcard `*` in `frame-ancestors` | PASS |
+| Default server (no flag) still returns `X-Frame-Options: DENY` | PASS (local, port 7911) |
+| `http://` origin is rejected at startup | PASS (exit 2) |
+| `https://*` is rejected at startup | PASS (exit 2) |
+| Public isolation gate against the deployed server | PASS — **19/19** |
+| The Space page loads and the iframe points at the live server | PASS (`iframe.src == https://c4.tensorgarten.de/`) |
+| The board renders inside the frame (title, seat buttons, model name, board) | PASS (screenshot) |
+| A full game played through the framed origin | PASS — 7 plies, the model replied each time, ended `ai_win` |
+| Space `index.html` served | PASS (HTTP 200) |
+| Demo GIF served byte-identical from the Space CDN | PASS — SHA-256 `b249bb75…ff29`, 231,546 bytes |
+
+The framed play test sends `Origin` and `Referer` of the Space and
+`Sec-Fetch-Dest: iframe`, i.e. it exercises the same request shape a
+browser produces inside the frame.
 
 ---
 

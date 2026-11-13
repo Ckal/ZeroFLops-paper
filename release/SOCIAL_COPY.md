@@ -20,8 +20,8 @@
 ### 1a. The main thread (7 posts)
 
 > **1/7**
-> I taught a neural net to play Connect Four with an exact solver as its
-> teacher — every ply of every game labelled with the set of optimal moves.
+> I taught a neural net to play Connect Four with a search engine as its
+> teacher — every ply of every game labelled with the set of teacher moves.
 >
 > Then I measured two things separately:
 > - how often it agrees with the teacher: **59.6%**
@@ -32,13 +32,13 @@
 
 > **2/7**
 > The setup: 320,000 games. 4,462,571 per-ply labels. Every label is the
-> *set* of optimal moves from an exact solver, so ties stay ties.
+> *set* of moves from a negamax teacher, so ties stay ties.
 >
 > Architecture is GF(2⁸) — XOR, table lookups, integer adds. No float MAC in
 > the trunk. 8.4M params, 32 MB, runs on CPU.
 
 > **3/7**
-> Agreement with the exact solver:
+> Agreement with the teacher:
 >
 > step 0 → **16.3%**
 > step 6000 → 50.9%
@@ -93,7 +93,7 @@
 ### 1b. Shorter single post (if the thread is too long)
 
 > A neural net trained with an exact Connect Four solver as teacher:
-> 59.6% agreement with optimal moves, beats random 85.2%...
+> 59.6% agreement with the teacher, beats random 85.2%...
 > and loses to a 3-line heuristic.
 >
 > Teacher-agreement ≠ game strength. Full evidence, code and model:
@@ -129,7 +129,7 @@
 
 ## 2. Blog post — `ckaller.blogspot.de`
 
-**Title:** *My Connect Four model agrees with the perfect player 59% of the
+**Title:** *My Connect Four model agrees with its teacher 59% of the
 time and still loses to a three-line rule*
 
 **Structure:**
@@ -161,16 +161,16 @@ the first paragraph, not buried. Every number links to the release record.
 
 ## 3. LinkedIn
 
-> I built a Connect Four model with an exact solver as teacher — and it
+> I built a Connect Four model with a negamax teacher — and it
 > taught me something more useful than a better model.
 >
-> Every ply of every game was labelled with the set of optimal moves. 320,000
+> Every ply of every game was labelled with the set of teacher moves. 320,000
 > games. 4.46M per-ply labels. The architecture is GF(2⁸): XOR, table
 > lookups, integer adds, no floating-point multiply-accumulate in the trunk.
 >
 > Two measurements, deliberately kept separate:
 >
-> • Agreement with the exact solver: 16.3% → 59.6% (train), 11.9% → 41.0%
+> • Agreement with the teacher: 16.3% → 59.6% (train), 11.9% → 41.0%
 >   (board-disjoint holdout)
 > • Game strength: beats a random player 85.2% of the time... and stays
 >   net-negative against a 1-ply heuristic at every point in the run
@@ -204,10 +204,10 @@ muted).
 
 | Beat | Content |
 |---|---|
-| 0:00 | Title card: *A model that agrees with the perfect player 59% of the time — and still loses.* |
-| 0:06 | The board, empty. Caption: *Every ply labelled with the set of optimal moves. 320,000 games.* |
+| 0:00 | Title card: *A model that agrees with its teacher 59% of the time — and still loses.* |
+| 0:06 | The board, empty. Caption: *Every ply labelled with the set of teacher moves. 320,000 games.* |
 | 0:14 | The model moves. The 7-column next-move distribution appears and **updates visibly** each ply. This is the hero shot. |
-| 0:30 | Caption: *59.6% agreement with the exact solver. Holdout: 41.0%.* |
+| 0:30 | Caption: *59.6% agreement with the teacher. Holdout: 41.0%.* |
 | 0:38 | Split screen vs. random: wins. Caption: *Beats random 85.2%.* |
 | 0:46 | Split screen vs. the 3-line heuristic: loses. Caption: *Loses to a 1-ply heuristic. At every step of the run.* |
 | 1:00 | End card: repo / model / play links. Caption: *Teacher-agreement ≠ game strength.* |

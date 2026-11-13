@@ -1376,7 +1376,7 @@ A single V24 run gets the whole GPU. Measured on the real V24 path
 
 #### 5r.2 Batch 32 is 1.22×, not 2×
 
-Claude's throughput table came from `tg_scale4096.py`, a 4096-row V22
+The reviewer's throughput table came from `tg_scale4096.py`, a 4096-row V22
 architecture with a different loop. On the real path: batch 16 →
 24.77 rows/s, batch 32 → 30.10 rows/s. **Batch 16 stays** — the paper
 constraint stands, and 1.22× does not justify changing the protocol.

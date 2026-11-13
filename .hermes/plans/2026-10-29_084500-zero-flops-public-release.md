@@ -639,14 +639,15 @@ namespace decision, G5 needs the hostname decision, and G7 needs the real URLs.
 | 1 | `tmp/test_sessions_unit.py` — run it | ✅ **47/47** — found 2 real bugs, both fixed |
 | 2 | Fix the reload/new-session closure (B3) | ✅ code fixed + `tmp/test_ui_hot_reload.py` **17/17** |
 | 3 | 200-game strength matrix for step 20000 | ✅ done — 18000 ahead on **all 5 arms** |
-| 4 | 200-game strength matrix for step 40000 | 🔄 running (`proc_866a64fc5e55`) |
+| 4 | 200-game strength matrix for step 40000 | ✅ done — 18000 ahead on **all 5 arms** |
 | 5 | Reconcile every number into `release/RELEASE_RECORD.md` | ✅ §5.0 ledger + every doc reconciled |
 | 6 | Freeze the artifact + SHA-256 | ✅ `134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2` |
-| 7 | Full regression sweep against the new code | 🔄 running (`proc_d9a838e246a3`, UI port 7899) |
+| 7 | Full regression sweep against the new code | 🔄 rerunning (`proc_f4b8bf420865`, UI port 7902) after 5 cookie-jar fixes |
 | 8 | Restart 7860/7861 on the new code | ⏳ needs #7 |
 | 9 | Commit the session work | ✅ `b286aee`, `d58f172` |
 | 10 | Switch `gh` to `Ckal`; stage + verify the release tree | ✅ **done — repo published** |
-| 11 | **Ask the user:** HF namespace handle + public hostname | 🔴 blocking G4/G5 |
+| 11 | HF namespace | ✅ **RESOLVED — `Chris4K`** (email-verified Christof.kaller@gmail.com, write role proven) |
+| 12 | **Ask the user:** public hostname only | 🔴 blocking G5 |
 
 ### Progress log
 
@@ -657,22 +658,31 @@ namespace decision, G5 needs the hostname decision, and G7 needs the real URLs.
   public and verified via the GitHub API. 100 files, 2.1 MB, clean history,
   local paths sanitized, `Christof Kaller` confirmed as the account owner.
   The honest framing (both losses) is in the repo description and README.
-- **G4 Hugging Face — BLOCKED** on a Christof-owned namespace.
+- **G4 Hugging Face — CLOSED.** `https://huggingface.co/Chris4K/connect-four-gf256`
+  is public. The namespace was verified as Christof-owned by the live token's
+  own `whoami-v2` (email-verified `Christof.kaller@gmail.com`, fullname "CK",
+  write role), and write access was proven by creating + deleting a probe repo.
+  The published `best_hard.pt` was re-downloaded anonymously and its SHA-256
+  matches the frozen artifact exactly.
+- **Centrum claim CORRECTED (2026-10-29).** The published claim "the model
+  loses to `centre_policy` (90.5 % vs 85.2 %, p = 0.0024)" mixed two
+  measurements. `duel(arm, opp)` reports the arm's wins as `A_wins`, so the
+  MODEL row 543-57-0 in the `centre` block is the model *winning* the
+  head-to-head at 90.5 %. The Fisher test compares model-vs-random against
+  centre_policy-vs-random — a same-task comparison that says centre_policy
+  is stronger against random. Both are true, measure different things, and
+  every public document now states them separately. The paper's "beats the
+  best constant in only 2 of 5 settings" was also falsified by the measured
+  matrix and has been replaced with the real numbers.
 - **G5 Public game — BLOCKED** on the hostname, and on #7/#8.
 
 
 ### Two questions only the user can answer
 
-**Q1 — Hugging Face namespace.** The `ckal` HF account is **Bob Kaleugher**, a
-different person. The locally authenticated account is `AlexChen1403`, which is
-the wrong identity for a Christof-attributed release. Options:
-(a) an existing Christof-owned HF handle, (b) register a new one (needs an email
-confirmation in a browser), (c) publish privately under the authenticated
-account as a labelled fallback.
+**Q1 — Hugging Face namespace: RESOLVED.** `Chris4K` is the verified
+Christof-owned namespace. (For the record: `ckal` is Bob Kaleugher and
+`christof` is Christof Roduner — both are other people and were left alone.)
 
-**Q2 — public hostname.** Proposed `play.tensorgarten.de` → 159.195.150.113.
-`*.tensorgarten.de` already resolves there and the host runs Docker + Nginx,
-but the exact vhost layout must be inspected before anything is added.
 
 ---
 

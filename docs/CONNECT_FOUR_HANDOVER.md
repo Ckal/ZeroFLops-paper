@@ -168,7 +168,7 @@
 > initialisation problem. **Do not launch V24.**
 
 Date: 2026-10-26 (night addendum)
-Repo: `C:\Users\Chris4K\projects\ZeroFLops-paper`
+Repo: `<repo>`
 Current run: `runs/_probe/tb00/` (3,000 steps, `--table-bias 0.0`, completed)
 Decisive evidence:
 - `runs/_probe/tbfix_final/disj_fix_hard.json` — fix arm, hard export,
@@ -1361,7 +1361,7 @@ that is not so many we can almost generate them? think hard. Why is it
 wrong what we do?"* — with a competing structural explanation attached
 (sparse lag wiring + the entropy regulariser).
 
-**Short answer: the user was right about the data, and Claude was right
+**Short answer: the data diagnosis was right, and the reviewer was right
 about the structure. They are two different problems, and BOTH must be
 fixed. Neither alone is sufficient.**
 
@@ -1383,7 +1383,7 @@ corpus does **not** buy mirror-consistent *behaviour* — the labels can be
 perfect and the model still asymmetric, because the asymmetry is
 structural.
 
-### 0f.2 Claude's hypothesis #1 (structural blindness) — CONFIRMED
+### 0f.2 Reviewer hypothesis #1 (structural blindness) — CONFIRMED
 
 The lag wiring genuinely makes four of seven columns unreachable, and
 the mirror pairs are structurally asymmetric. Measured on the actual
@@ -1419,7 +1419,7 @@ Dense lags `0..9,10,20` (ctx stays **192**) make every header byte one
 hop away and make the three mirror pairs symmetric to within 14%.
 **This is a real, confirmed defect and the fix is real.**
 
-### 0f.3 Claude's hypothesis #2 (entropy regulariser) — REFUTED
+### 0f.3 Reviewer hypothesis #2 (entropy regulariser) — REFUTED
 
 `ent_max=0` with `table_bias=0`, 3,000 steps, everything else identical:
 
@@ -1571,7 +1571,7 @@ four arms with `--table-bias 0.0 --hard-start 0`, ctx 192, batch 16:
 
 ```
 A  sparse lags, full-game data     (current state of the art)
-B  dense  lags, full-game data     (Claude's fix alone)
+B  dense  lags, full-game data     (the reviewer's fix alone)
 C  sparse lags, curriculum data    (the user's fix alone)
 D  dense  lags, curriculum data    (both)   <-- the candidate
 ```
@@ -2707,7 +2707,7 @@ mutual truncation carrying two `EXIT=15` lines. Only the per-run logs
 ## 9. Reproducing
 
 ```bash
-cd C:/Users/Chris4K/projects/ZeroFLops-paper
+cd <repo>
 bash run_v21_live.sh            # 3,000 steps, seed 32, ctx 192, batch 16
 bash run_v22_greedy.sh          # 25,000 steps, greedy eval, resumes V21
 ```
@@ -2735,7 +2735,7 @@ Key probes:
 - venv: `.venv-c4` (pandas, pyarrow, psutil)
 - GPU: RTX 5090; one GF step ≈ 0.93 s at batch 16 / ctx 192
 - CPU: 32 cores (the ladder and capacity probes run here, off the GPU)
-- Source shard: `C:/Users/Chris4K/AppData/Local/Temp/c4data/chunk0.parquet`
+- Source shard: `<data>/chunk0.parquet`
 - Exact solver: `src/c4/exact_solver.py` — mean 0.038 ms, max 0.861 ms
 - Canonical seed: **32**
 - ctx 192, batch 16 — both fixed by the paper
@@ -6292,11 +6292,11 @@ is a materially different policy, one that scores about the same overall
 of the time. That is the clearest single statement of the failure: the
 model learned something, but not the thing it was taught.
 
-## Appendix D18 — Retraction of the stale status line, and Claude's critique adjudicated (2026-10-28, late)
+## Appendix D18 — Retraction of the stale status line, and the external critique adjudicated
 
 ### D18.1 Why this appendix exists
 
-An external review of this project (Claude) challenged the reading of D16 and
+An external review of this project challenged the reading of D16 and
 flagged that this document contradicted itself. Both were correct. This
 appendix records the retraction and the adjudication, and points at the
 one-page replacement: **`docs/CURRENT_TRUTH.md`**.
@@ -7438,17 +7438,17 @@ cannot be resumed after a crash is not a safe thing to start.
 
 ---
 
-## Appendix D28 — Claude's review, applied: the pre-launch package
+## Appendix D28 — The external review, applied: the pre-launch package
 
 **Date:** 2026-10-28 (evening, before the midnight V24 launch)
 **Status:** V24 pre-flight complete. Not yet launched.
 
-### D28.1 What Claude got right, and what I checked rather than believed
+### D28.1 What the external review got right, and what I checked rather than believed
 
-Claude sent a review of the trainer with five substantive claims. Each was
+An external reviewer sent a review of the trainer with five substantive claims. Each was
 checked against the **shipped** code, not against a description of it.
 
-| # | Claude's claim | Verdict | Evidence |
+| # | Reviewer's claim | Verdict | Evidence |
 |---|---|---|---|
 | 1 | The historical per-ply path had a **second** indexing error (`// (W+1)` over a `B×W` grid), so batch row *k* received the early positions *t < k* from row *k−1* | **CONFIRMED** | `tmp/verify_second_index_error.py` reproduces the exact failure pattern |
 | 2 | The *current* fix is correct | **CONFIRMED** | decoded-ply invariant: **6504/6504** production sampled positions pass, including small-`t`, `k>0` cases |
@@ -7456,7 +7456,7 @@ checked against the **shipped** code, not against a description of it.
 | 4 | The trainer saves **no optimizer state and no RNG state**, and has **no LR schedule and no EMA** | **CONFIRMED** | all four were absent before this session's edits |
 | 5 | Batch 32 gives **2×** the throughput | **REFUTED** | real V24 path measures **1.22×** (see D28.4) |
 
-Claude also claimed `src/gf256_markov_lm.py` "already has that checkpoint
+The review also claimed `src/gf256_markov_lm.py` "already has that checkpoint
 logic and can be adopted". **That specific pointer is inaccurate** —
 that file contains no optimizer-state or RNG-state checkpoint
 implementation to reuse. The logic was written from scratch here.
@@ -7489,7 +7489,7 @@ reused by the hard export, which must stay a lean integer-table payload.
 
 ### D28.4 Batch size: the measured answer, not the claimed one
 
-Claude's table came from `tg_scale4096.py`, a **4096-row V22**
+The reviewer's table came from `tg_scale4096.py`, a **4096-row V22**
 architecture with a different loop. The real V24 path
 (`src.c4.train`, per-ply sidecars, dense 12 lags, ctx 192) measures:
 
@@ -7506,7 +7506,7 @@ the amortised cost is **+0.004 s/step**, so the effective rate is
 - one epoch (20,000 steps) ≈ **3.6 h**
 - 100,000 steps (5 epochs) ≈ **18.1 h**
 
-Claude's "5 epochs in ~9 h" is not supported by the real path.
+The reviewer's "5 epochs in ~9 h" is not supported by the real path.
 **Batch 16 remains the documented configuration** — the paper constraint
 stands, and 1.22× is not worth changing the experimental protocol for.
 

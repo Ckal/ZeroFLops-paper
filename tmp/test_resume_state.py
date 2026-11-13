@@ -2,7 +2,7 @@
 
 WHY
 ---
-Claude's review flagged that the trainer's checkpoint carries weights and
+The trainer's checkpoint carries weights and
 step but NOT the optimiser moments or the RNG states.  That is real: a
 resume restarts Adam from empty moments (loss spike) and continues with a
 different sampling sequence, so a resumed run is NOT the same trajectory

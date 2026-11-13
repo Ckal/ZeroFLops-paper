@@ -2,7 +2,7 @@
 
 ## A Character-Level Language Model Whose Trunk Compiles to an Integer Program
 
-**Christof Ckal** (Christof Kaller)
+**Christof Ckal**
 
 > **A note on this paper.** This is a self-contained, publication-ready
 > version of the text-generation work. The original working draft interleaved

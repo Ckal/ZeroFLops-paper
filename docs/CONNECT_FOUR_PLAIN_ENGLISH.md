@@ -825,7 +825,7 @@ mirror-consistent labels. It does not give you a mirror-consistent
 model.** V23 predates the table-freezing fix, so it is a historical
 artifact — not a release candidate.
 
-#### The structural blindness is real (Claude was right)
+#### The structural blindness is real (the review was right)
 
 The wiring that actually ships makes four of the seven columns hard or
 impossible to reach, and the left and right sides of the board are
@@ -855,7 +855,7 @@ sparse:  c0/c6 1.00x   c1/c5 infinite   c2/c4 1.08x
 dense:   c0/c6 1.09x   c1/c5 1.00x      c2/c4 1.14x
 ```
 
-#### The entropy regulariser is NOT the cause (Claude was wrong here)
+#### The entropy regulariser is NOT the cause (the review was wrong here)
 
 Turning the entropy regulariser off entirely changes nothing about the
 blindness:
