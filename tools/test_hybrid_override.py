@@ -48,21 +48,16 @@ def main():
     print("\n--- Test 1: Standard Model vs 1-ply Heuristic ---")
     pol_standard = _model_policy(agent, hard=True, eps=0.0, rng=rng)
     res_standard = duel(pol_standard, noisy_heuristic, games=500, seed=42)
-    print(f"Standard Win Rate: {res_standard['A_win_rate']*100:.1f}%")
+    print(f"Standard result: {res_standard}")
     
     print("\n--- Test 2: HYBRID Model (Override) vs 1-ply Heuristic ---")
     pol_hybrid = hybrid_policy(agent, hard=True)
     res_hybrid = duel(pol_hybrid, noisy_heuristic, games=500, seed=42)
-    print(f"Hybrid Win Rate: {res_hybrid['A_win_rate']*100:.1f}%")
+    print(f"Hybrid result: {res_hybrid}")
     
     print("\n" + "="*50)
-    if res_hybrid['A_score_pct'] > 60:
-        print("SUCCESS: The Hybrid model beats 1-ply!")
-        print("Your network DID learn positional play. The 'failure' was just greedy blunders.")
-    else:
-        print("FAILURE: The Hybrid model still loses.")
-        print("Your network has NOT learned positional play in quiet moments.")
-        print("Its 41% holdout agreement was just memorizing tactical patterns.")
+    print("The opponent explores at 15%, including on tactical positions.")
+    print("These results alone cannot prove or rule out positional learning.")
     print("="*50)
 
 if __name__ == "__main__":

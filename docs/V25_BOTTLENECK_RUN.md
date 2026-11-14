@@ -80,7 +80,8 @@ supported by this architecture.
 ## Next (from the handover)
 
 1. Longer run if the curve is still climbing.
-2. Model + rule wrapper ("win if you can, block if you must") vs rule alone.
+2. Model + rule wrapper ("win if you can, block if you must") vs rule alone:
+   see the paired-opening experiment below.
 
 
 ## Results (run finished, 80,000 steps, ~23.9 h)
@@ -135,7 +136,7 @@ Score = (wins + 0.5 draws) / games for the model.
 - Train LABEL 63% vs holdout 29.6% (V6: ~59% vs ~36%): the extra train fit does not transfer.
   This gap is consistent with overfitting, but parameter count versus position
   count does not establish whether the model memorised individual boards.
-- Not evaluated in these games: the model+rule wrapper idea.
+- These games did not evaluate the model+rule wrapper; see the experiment below.
 
 ## Board-disjoint tactical test
 
@@ -174,3 +175,49 @@ identify the role of the GF trunk versus the readout, or quantify exact
 memorisation. The distributions, training data and checkpoint selection
 differ; use a fresh held-out exam and matched runs for stronger conclusions.
 The machine-readable result is `runs/_probe/gf_generalization_tactics.json`.
+
+## Hybrid versus one-ply rule from fresh openings
+
+The earlier hybrid experiment already existed: commit `6d07483` introduced
+`tools/test_hybrid_override.py` and recorded 30.8% standard-model wins and
+54.6% hybrid wins over 500 games each. The recorded checkpoint and full game
+outcomes are not in the commit. The script applied 15% random exploration to
+the opponent, including on immediate tactics; 54.6% is a win rate above 50%,
+not a loss merely because it is below the script's arbitrary 60% threshold.
+The commit's claim that this proved memorisation is not justified by that test.
+
+`tmp/eval_hybrid_fresh.py` repeats the requested comparison using the V24 V6
+best hard checkpoint (SHA-256
+`134035637b637f87f3837aa8929dc5ec5db3bb0f0c9526f93fe1449be77672e2`).
+Both players deterministically win immediately if possible, otherwise block
+an immediate opponent win if possible, using the same ordered tie-break.
+On other positions the hybrid uses the model's greedy move and the opponent
+uses the one-ply heuristic's centre-first move. No per-move noise is applied.
+
+Seed 872361 produced 600 distinct mirror-canonical, non-terminal, 12-ply
+random openings without an immediate win for either side. Each opening
+was checked against the entire V24 and V25b training corpora and the V26
+surgery train and holdout positions, including mirrored boards; 14 overlapped
+the training corpora and none overlapped the surgery set. The first 200
+remaining boards were each played twice, with the hybrid as each colour.
+The starting boards are disjoint, but subsequent positions need not be.
+
+- Hybrid vs one-ply: **171 wins, 209 losses, 20 draws**, 400 games;
+  score **45.25%** (wins + half draws), 393 distinct full continuations.
+- Hybrid as player 1: 92 wins, 101 losses, 7 draws; as player 2:
+  79 wins, 108 losses, 13 draws.
+- Paired-opening bootstrap 95% interval: **41.0% to 49.5%**. The openings
+  are generated from the specified random policy, not a representative sample
+  of all legal boards. Two games from the same opening are not independent.
+
+On this distribution and checkpoint the win/block-wrapped model did not beat
+the rule-only baseline. This is evidence against an advantage from the model's
+quiet-position choices in this matchup, not proof that it learned no
+positional knowledge. It also does not isolate trunk from readout, test V25b,
+or demonstrate strength from ordinary empty-board play. The complete opening
+and continuation records are in `runs/_probe/hybrid_fresh_games.json`.
+
+Reproduce: `.venv-c4\Scripts\python.exe tmp\eval_hybrid_fresh.py`. Three
+focused checks cover deterministic quiet openings, win/block precedence and
+paired-seat scoring; the standard test runner did not discover these scripts
+and pytest was unavailable in the environment.
