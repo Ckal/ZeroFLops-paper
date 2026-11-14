@@ -101,11 +101,14 @@ V6 baseline (`runs/_probe/v24.log`, different logging, check corpus parity befor
 HOLDOUT 36.2% at 20k, 34.7% at 40k; LABEL ~59% plateau.
 
 ### Verdict
-- Bottleneck readout does NOT generalise better. HOLDOUT stays 28-30% (V6: 35-36%).
-  Train LABEL rises 50% -> 63% (memorisation) while H-LABEL is flat/noisy ~25-28%.
+- Bottleneck readout did not show better generalisation in these runs. HOLDOUT
+  stays 28-30% (V6: 35-36%). Train LABEL rises 50% -> 63% while H-LABEL
+  is flat/noisy ~25-28%; this gap suggests overfitting but does not prove
+  exact-board memorisation. The V6 and V6b training sets differ.
 - bpb diverges upward after ~6k steps (soft 6.76 -> 14+): the byte-level loss gets worse
   while label accuracy improves; the MLP readout is trading LM quality for label fit.
-- Plateau by ~16-18k steps, matching the V6 observation; further training only overfits.
+- Training LABEL continued to improve until step 32000; holdout stayed nearly
+  flat. Later training did not improve the final training LABEL.
 - Conclusion: the "force reasoning via bottleneck" hypothesis is not supported. V6b is
   worse than V6 on holdout. Keep V6 as the reference.
 
@@ -126,11 +129,48 @@ Score = (wins + 0.5 draws) / games for the model.
 
 ### Reading
 - V6b is clearly weaker than V6 on every opponent and loses head-to-head 41-154.
-- V6b loses 27% of games against a random mover and 95% against the simple lookahead
-  opponent, so it does not reliably play even "win if you can / block if you must".
-  V6 is also far from solved (15% vs lookahead), but is a full tier above.
+- V6b loses 27% of games against a random mover and 95% against the simple
+  lookahead opponent. These game results alone do not measure win-or-block
+  accuracy; see the board-disjoint tactical test below.
 - Train LABEL 63% vs holdout 29.6% (V6: ~59% vs ~36%): the extra train fit does not transfer.
-  Params (12.7M) are comparable to the number of training positions (~12M), so
-  memorisation is possible; the flat holdout and rising bpb are consistent with
-  memorisation rather than learned tactics. (Not proven; no leave-out ablation was run.)
-- Not evaluated: the model+rule wrapper idea; per-tactic position accuracy.
+  This gap is consistent with overfitting, but parameter count versus position
+  count does not establish whether the model memorised individual boards.
+- Not evaluated in these games: the model+rule wrapper idea.
+
+## Board-disjoint tactical test
+
+`tmp/test_gf_generalization.py` evaluates the original V24 V6 and V25b V6b
+best hard checkpoints on the existing V26 surgery holdout. This is not a
+fresh final test set: the V26 work already used it for evaluation and
+selection. The script canonicalises each board with its left-right mirror
+and checks its seven ownership/height bytes and side to move against every
+board in both actual V24 and V25b training corpora. It does not merely
+compare move histories or last-move fields.
+
+The original 3306 holdout records contain 3183 distinct board/mirror
+classes. Of these, 813 occur in each training corpus, despite the surgery
+holdout being disjoint from the *surgery* training positions. Removing
+all such overlaps leaves 2370 classes; 85 positions with multiple opposing
+immediate threats and no immediate win are excluded from the three categories.
+The score therefore covers 2285 distinct, training-board-disjoint positions.
+
+| Policy | Immediate win (n=569) | Single forced block (n=425) | Quiet teacher agreement (n=1291) |
+|---|---:|---:|---:|
+| Random legal column, expected | 19.87% | 16.14% | 24.36% |
+| Centre-first legal column | 25.48% | 25.65% | 43.14% |
+| V24 V6 | 41.83% (238) | 50.35% (214) | 35.71% (461) |
+| V25b V6b | 23.37% (133) | 22.59% (96) | 34.00% (439) |
+
+Winning and blocking columns are checked by applying each possible move and
+calling the board's win detector, independently cross-checking the search
+helper. Quiet scores use the existing time-limited teacher labels, not
+proof of optimal play; a quiet position can have other tactical properties.
+
+V6 performs substantially above the centre baseline on unseen immediate
+wins and blocks, evidence of some tactical generalisation, though it still
+misses many. V6b does not beat the centre baseline on those categories in
+this sample. This does not isolate the effect of training from initialisation,
+identify the role of the GF trunk versus the readout, or quantify exact
+memorisation. The distributions, training data and checkpoint selection
+differ; use a fresh held-out exam and matched runs for stronger conclusions.
+The machine-readable result is `runs/_probe/gf_generalization_tactics.json`.
