@@ -1,0 +1,30 @@
+
+##### 2026-11-11 16:29:14
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --mode hard --data data/enwik8.train --val_file data/enwik8.valid --words --cache --check_loo --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample 0 --out runs --tag p_e8_tab
+data: 90,000,000 train bytes, 5,000,000 val bytes
+building the hard model ...
+  ngram orders 1..5: 11,465,696 entries, 8s
+  long contexts [8, 12, 16] (seen >= 2x): 38,491,471 entries, 32s
+word classes: 50,000 words -> 254 classes (co-occurrence), 6s
+   class   6: gt amp b d c nbsp ja bgcolor zh prime
+   class  17: an more part small high large different long similar few
+   class  26: are which not also were been who no only often
+   class  33: it he what she jesus christ microsoft someone hitler caesar
+  word contexts: 31,828,235 entries, 23s
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 81,785,402 table entries | 70s -> runs\p_e8_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+  ngram_o2    val BPC 3.1156
+  ngram       val BPC 2.0072   <- main
+  ngram_long  val BPC 1.8792
+  word        val BPC 2.1565
+  cache       val BPC 3.2125
+  ngram_long blended with 10% cache: val BPC 1.6651  (-0.2141)
+  ngram_long blended with 20% cache: val BPC 1.6462  (-0.2330)
+  ngram_long blended with 30% cache: val BPC 1.6580  (-0.2212)
+leave-one-out check (bits per byte of each expert):
+                                        ngram_o2       ngram  ngram_long        word       cache
+  validation text                         3.1156      2.0072      1.8792      2.1565      3.2125
+  counted text, own byte left out         3.1055      1.8814      1.6816      2.0284      3.2635
+    minus validation                     -0.0102     -0.1258     -0.1976     -0.1281     +0.0509
+  knowledge probe, tables alone: 50.8% of 65 right
+saved -> runs\p_e8_tab_best.pt

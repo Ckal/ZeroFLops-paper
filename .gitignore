@@ -57,6 +57,52 @@ data/*sidecar*
 data/*targets*.npy
 data/*.npy
 
+# ---- hard-residual LM line: corpora and checkpoints --------------------
+# The enwik8 / smollm corpora are reproducible from the download commands in
+# RESEARCH_STATUS.md section 7 and are far too large to publish here.
+data/enwik8
+data/enwik8.zip
+data/enwik8.train
+data/enwik8.valid
+data/enwik8.test
+data/smollm_subset_*.txt
+data/corpus_c4_bytes.txt
+
+# Trained LM checkpoints are large (150 MB - 1.1 GB each). The paper ships the
+# measured numbers and the scripts; the weights live on Hugging Face.
+runs/
+runs_tiny/
+paper_tiny/
+*.pt
+!release/artifacts/*.pt
+
+# Stale snapshots of the LM scripts taken by earlier agent runs. The root
+# copies are canonical (they are newer and carry the gold2/rms-dyn stages).
+f2/
+fable/
+
+# Search-stage scratch: one 106 MB checkpoint plus per-seed logs. The
+# measured settings live in search/*/search.md and results.csv, which are
+# kept.
+search/web/runs/
+search/web/logs/
+
+# Scratch under tmp/ and paper/: the curated regression tests in tmp/ are
+# tracked, but the one-off probes, deploy stages and duplicated snapshots
+# are not. Only the untracked remainder is listed here.
+tmp/_*
+tmp/*.gif
+tmp/*.html
+tmp/*.ps1
+tmp/*.sh
+tmp/c4-deploy-stage/
+tmp/.tg_*
+paper/code/
+paper_tiny/
+nul
+_v24_kp.txt
+_v24_pt.txt
+
 # ---- loose probe scripts at the repo root ------------------------------
 # One-off diagnostics written while chasing individual questions. The
 # curated regression tests in tmp/ capture the durable assertions; these

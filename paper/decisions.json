@@ -1,0 +1,6 @@
+{
+ "rope": true,
+ "learned_positions": 1.3461765079883186,
+ "rotary_positions": 1.31566809252468,
+ "rule": "rotary positions are used if they are more than 0.002 BPC better in the pilot"
+}

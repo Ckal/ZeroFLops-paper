@@ -1,0 +1,325 @@
+
+##### 2026-11-11 10:07:03
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 12s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+--resume: no runs\p_main_cache_last.pt yet, starting from scratch
+step      0 |      13s | train nan | val BPC 8.4680 | probe 31%  * saved
+step   1000 |      94s | train 2.2531 | val BPC 1.6284 | 3.4h left  * saved
+step   2000 |     144s | train 1.5419 | val BPC 1.5154 | 2.7h left  * saved
+step   3000 |     195s | train 1.4767 | val BPC 1.4740 | 2.5h left  * saved
+step   4000 |     246s | train 1.4477 | val BPC 1.4581 | 2.4h left  * saved
+step   5000 |     296s | train 1.4282 | val BPC 1.4336 | 2.3h left  * saved
+step   6000 |     345s | train 1.4130 | val BPC 1.4215 | 2.2h left  * saved
+step   7000 |     393s | train 1.4027 | val BPC 1.4067 | 2.2h left  * saved
+step   8000 |     442s | train 1.3929 | val BPC 1.3990 | 2.1h left  * saved
+step   9000 |     492s | train 1.3815 | val BPC 1.3872 | 2.1h left  * saved
+step  10000 |     544s | train 1.3745 | val BPC 1.3804 | probe 75% | 2.2h left  * saved
+step  11000 |     627s | train 1.3665 | val BPC 1.3746 | 2.2h left  * saved
+step  12000 |     676s | train 1.3594 | val BPC 1.3644 | 2.1h left  * saved
+step  13000 |     724s | train 1.3551 | val BPC 1.3581 | 2.1h left  * saved
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 249768192 vs 249768080); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 249768192 vs 249768080); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 249768192 vs 249768080); skipped
+step  14000 |     789s | train 1.3496 | val BPC 1.3596 | 2.1h left
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); skipped
+step  15000 |     837s | train 1.3434 | val BPC 1.3498 | 2.1h left  (best, but not saved)
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 245573760 vs 245573652); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 245573760 vs 245573652); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 245573760 vs 245573652); skipped
+
+##### 2026-11-11 10:32:55
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 7s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+Traceback (most recent call last):
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1817, in <module>
+    main(a)
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1550, in main
+    gen.set_state(st["gen"])
+TypeError: RNG state must be a torch.ByteTensor
+
+##### 2026-11-11 10:45:04
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 6s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+Traceback (most recent call last):
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1817, in <module>
+    main(a)
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1550, in main
+    gen.set_state(st["gen"])
+TypeError: RNG state must be a torch.ByteTensor
+
+##### 2026-11-11 11:29:52
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 7s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+Traceback (most recent call last):
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1817, in <module>
+    main(a)
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1550, in main
+    gen.set_state(st["gen"])
+TypeError: RNG state must be a torch.ByteTensor
+
+##### 2026-11-11 12:04:01
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 6s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+resuming p_main_cache at step 11000 (best so far 1.3746 at step 11000)
+step  11000 |     635s | train nan | val BPC 1.3746
+step  12000 |     689s | train 1.3593 | val BPC 1.3638 | 2.1h left  * saved
+step  13000 |     744s | train 1.3552 | val BPC 1.3583 | 2.1h left  * saved
+step  14000 |     799s | train 1.3496 | val BPC 1.3535 | 2.1h left  * saved
+step  15000 |     855s | train 1.3435 | val BPC 1.3497 | 2.1h left  * saved
+step  16000 |     910s | train 1.3389 | val BPC 1.3444 | 2.1h left  * saved
+step  17000 |     965s | train 1.3362 | val BPC 1.3404 | 2.0h left  * saved
+step  18000 |    1020s | train 1.3311 | val BPC 1.3334 | 2.0h left  * saved
+step  19000 |    1075s | train 1.3266 | val BPC 1.3317 | 2.0h left  * saved
+step  20000 |    1129s | train 1.3209 | val BPC 1.3290 | 2.0h left  * saved
+step  21000 |    1184s | train 1.3183 | val BPC 1.3224 | probe 74% | 2.1h left  * saved
+step  22000 |    1270s | train 1.3148 | val BPC 1.3185 | 2.1h left  * saved
+step  23000 |    1325s | train 1.3123 | val BPC 1.3186 | 2.0h left
+step  24000 |    1379s | train 1.3057 | val BPC 1.3118 | 2.0h left  * saved
+step  25000 |    1435s | train 1.3027 | val BPC 1.3077 | 2.0h left  * saved
+step  26000 |    1490s | train 1.3015 | val BPC 1.3065 | 2.0h left  * saved
+step  27000 |    1544s | train 1.2961 | val BPC 1.3032 | 1.9h left  * saved
+step  28000 |    1600s | train 1.2965 | val BPC 1.3012 | 1.9h left  * saved
+step  29000 |    1655s | train 1.2925 | val BPC 1.2967 | 1.9h left  * saved
+step  30000 |    1710s | train 1.2901 | val BPC 1.2961 | 1.9h left  * saved
+step  31000 |    1765s | train 1.2883 | val BPC 1.2966 | probe 72% | 1.9h left
+step  32000 |    1843s | train 1.2850 | val BPC 1.2920 | 1.9h left  * saved
+step  33000 |    1899s | train 1.2863 | val BPC 1.2886 | 1.9h left  * saved
+step  34000 |    1953s | train 1.2833 | val BPC 1.2853 | 1.8h left  * saved
+step  35000 |    2005s | train 1.2808 | val BPC 1.2884 | 1.8h left
+step  36000 |    2055s | train 1.2759 | val BPC 1.2859 | 1.8h left
+step  37000 |    2106s | train 1.2780 | val BPC 1.2828 | 1.8h left  * saved
+step  38000 |    2156s | train 1.2758 | val BPC 1.2818 | 1.8h left  * saved
+step  39000 |    2209s | train 1.2733 | val BPC 1.2786 | 1.7h left  * saved
+step  40000 |    2264s | train 1.2734 | val BPC 1.2785 | 1.7h left  * saved
+step  41000 |    2315s | train 1.2688 | val BPC 1.2751 | probe 77% | 1.7h left  * saved
+step  42000 |    2392s | train 1.2692 | val BPC 1.2741 | 1.7h left  * saved
+step  43000 |    2442s | train 1.2697 | val BPC 1.2764 | 1.7h left
+step  44000 |    2492s | train 1.2664 | val BPC 1.2739 | 1.7h left  * saved
+step  45000 |    2543s | train 1.2670 | val BPC 1.2706 | 1.6h left  * saved
+step  46000 |    2593s | train 1.2645 | val BPC 1.2681 | 1.6h left  * saved
+step  47000 |    2643s | train 1.2643 | val BPC 1.2705 | 1.6h left
+step  48000 |    2696s | train 1.2614 | val BPC 1.2661 | 1.6h left  * saved
+step  49000 |    2749s | train 1.2609 | val BPC 1.2682 | 1.6h left
+step  50000 |    2802s | train 1.2587 | val BPC 1.2659 | 1.5h left  * saved
+step  51000 |    2856s | train 1.2589 | val BPC 1.2637 | probe 80% | 1.6h left  * saved
+step  52000 |    2941s | train 1.2574 | val BPC 1.2618 | 1.5h left  * saved
+step  53000 |    2995s | train 1.2575 | val BPC 1.2628 | 1.5h left
+step  54000 |    3049s | train 1.2543 | val BPC 1.2602 | 1.5h left  * saved
+step  55000 |    3103s | train 1.2547 | val BPC 1.2614 | 1.5h left
+step  56000 |    3156s | train 1.2526 | val BPC 1.2631 | 1.5h left
+step  57000 |    3210s | train 1.2526 | val BPC 1.2591 | 1.4h left  * saved
+step  58000 |    3264s | train 1.2512 | val BPC 1.2562 | 1.4h left  * saved
+step  59000 |    3318s | train 1.2491 | val BPC 1.2564 | 1.4h left
+step  60000 |    3371s | train 1.2479 | val BPC 1.2552 | 1.4h left  * saved
+step  61000 |    3423s | train 1.2464 | val BPC 1.2539 | probe 71% | 1.4h left  * saved
+step  62000 |    3510s | train 1.2476 | val BPC 1.2540 | 1.4h left
+step  63000 |    3563s | train 1.2459 | val BPC 1.2508 | 1.4h left  * saved
+step  64000 |    3617s | train 1.2453 | val BPC 1.2528 | 1.3h left
+step  65000 |    3670s | train 1.2436 | val BPC 1.2508 | 1.3h left  * saved
+step  66000 |    3724s | train 1.2424 | val BPC 1.2491 | 1.3h left  * saved
+step  67000 |    3777s | train 1.2411 | val BPC 1.2478 | 1.3h left  * saved
+step  68000 |    3831s | train 1.2422 | val BPC 1.2481 | 1.3h left
+step  69000 |    3885s | train 1.2419 | val BPC 1.2456 | 1.3h left  * saved
+step  70000 |    3938s | train 1.2394 | val BPC 1.2441 | 1.2h left  * saved
+step  71000 |    3992s | train 1.2389 | val BPC 1.2449 | probe 72% | 1.2h left
+step  72000 |    4077s | train 1.2370 | val BPC 1.2415 | 1.2h left  * saved
+step  73000 |    4131s | train 1.2357 | val BPC 1.2413 | 1.2h left  * saved
+step  74000 |    4186s | train 1.2354 | val BPC 1.2424 | 1.2h left
+step  75000 |    4240s | train 1.2346 | val BPC 1.2415 | 1.2h left
+step  76000 |    4293s | train 1.2358 | val BPC 1.2391 | 1.2h left  * saved
+step  77000 |    4348s | train 1.2326 | val BPC 1.2404 | 1.1h left
+step  78000 |    4401s | train 1.2324 | val BPC 1.2381 | 1.1h left  * saved
+step  79000 |    4454s | train 1.2301 | val BPC 1.2361 | 1.1h left  * saved
+step  80000 |    4507s | train 1.2307 | val BPC 1.2331 | 1.1h left  * saved
+step  81000 |    4561s | train 1.2291 | val BPC 1.2349 | probe 77% | 1.1h left
+step  82000 |    4643s | train 1.2271 | val BPC 1.2337 | 1.1h left
+step  83000 |    4693s | train 1.2264 | val BPC 1.2319 | 1.0h left  * saved
+step  84000 |    4743s | train 1.2271 | val BPC 1.2329 | 1.0h left
+step  85000 |    4794s | train 1.2259 | val BPC 1.2312 | 1.0h left  * saved
+step  86000 |    4848s | train 1.2262 | val BPC 1.2299 | 1.0h left  * saved
+step  87000 |    4901s | train 1.2264 | val BPC 1.2322 | 1.0h left
+step  88000 |    4954s | train 1.2224 | val BPC 1.2302 | 1.0h left
+step  89000 |    5007s | train 1.2222 | val BPC 1.2282 | 1.0h left  * saved
+step  90000 |    5059s | train 1.2210 | val BPC 1.2276 | 0.9h left  * saved
+step  91000 |    5111s | train 1.2196 | val BPC 1.2259 | probe 75% | 0.9h left  * saved
+step  92000 |    5193s | train 1.2208 | val BPC 1.2254 | 0.9h left  * saved
+step  93000 |    5247s | train 1.2183 | val BPC 1.2246 | 0.9h left  * saved
+step  94000 |    5300s | train 1.2189 | val BPC 1.2245 | 0.9h left  * saved
+step  95000 |    5353s | train 1.2177 | val BPC 1.2222 | 0.9h left  * saved
+step  96000 |    5406s | train 1.2164 | val BPC 1.2230 | 0.8h left
+step  97000 |    5457s | train 1.2151 | val BPC 1.2234 | 0.8h left
+step  98000 |    5507s | train 1.2138 | val BPC 1.2194 | 0.8h left  * saved
+step  99000 |    5557s | train 1.2126 | val BPC 1.2204 | 0.8h left
+step 100000 |    5607s | train 1.2121 | val BPC 1.2196 | 0.8h left
+step 101000 |    5658s | train 1.2096 | val BPC 1.2174 | probe 78% | 0.8h left  * saved
+step 102000 |    5734s | train 1.2120 | val BPC 1.2171 | 0.7h left  * saved
+step 103000 |    5784s | train 1.2117 | val BPC 1.2150 | 0.7h left  * saved
+step 104000 |    5835s | train 1.2099 | val BPC 1.2153 | 0.7h left
+step 105000 |    5885s | train 1.2083 | val BPC 1.2152 | 0.7h left
+step 106000 |    5935s | train 1.2071 | val BPC 1.2122 | 0.7h left  * saved
+step 107000 |    5986s | train 1.2052 | val BPC 1.2130 | 0.7h left
+step 108000 |    6036s | train 1.2062 | val BPC 1.2141 | 0.6h left
+step 109000 |    6086s | train 1.2026 | val BPC 1.2110 | 0.6h left  * saved
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); skipped
+step 110000 |    6136s | train 1.2032 | val BPC 1.2108 | 0.6h left  (best, but not saved)
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 45696 vs 45590); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); skipped
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); skipped
+step 111000 |    6219s | train 1.2027 | val BPC 1.2082 | probe 77% | 0.6h left  (best, but not saved)
+step 112000 |    6312s | train 1.2019 | val BPC 1.2088 | 0.6h left
+step 113000 |    6364s | train 1.2018 | val BPC 1.2073 | 0.6h left  * saved
+step 114000 |    6416s | train 1.2006 | val BPC 1.2068 | 0.6h left  * saved
+step 115000 |    6468s | train 1.2005 | val BPC 1.2057 | 0.5h left  * saved
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); skipped
+step 116000 |    6520s | train 1.1979 | val BPC 1.2052 | 0.5h left  (best, but not saved)
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 64 vs 0); skipped
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); retrying
+  warning: saving runs\p_main_cache_best.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 17920 vs 17814); skipped
+step 117000 |    6602s | train 1.1981 | val BPC 1.2044 | 0.5h left  (best, but not saved)
+step 118000 |    6669s | train 1.1950 | val BPC 1.2039 | 0.5h left  * saved
+step 119000 |    6723s | train 1.1962 | val BPC 1.2024 | 0.5h left  * saved
+step 120000 |    6775s | train 1.1956 | val BPC 1.2043 | 0.5h left
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 249769344 vs 249769232); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 249769344 vs 249769232); retrying
+  warning: saving runs\p_main_cache_last.pt failed ([enforce fail at inline_container.cc:672] . unexpected pos 249769344 vs 249769232); skipped
+OSError: [Errno 28] No space left on device
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1817, in <module>
+    main(a)
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1594, in main
+    acc = track(model, hm, step, vb, T, args, samples_path, prompts, probe)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Lib\site-packages\torch\utils\_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1191, in track
+    with open(path, "a", encoding="utf-8") as f:
+OSError: [Errno 28] No space left on device
+
+##### 2026-11-11 23:48:40
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 12s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+Traceback (most recent call last):
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 2016, in <module>
+    main(a)
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1707, in main
+    gen.set_state(st["gen"])
+TypeError: RNG state must be a torch.ByteTensor
+
+##### 2026-11-11 23:51:41
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 6s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+
+##### 2026-11-11 23:52:38
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 150000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_main_cache --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 6s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+resuming p_main_cache at step 118000 (best so far 1.2039 at step 118000)
+step 118000 |    6676s | train nan | val BPC 1.2039
+step 119000 |    6729s | train 1.1962 | val BPC 1.2024 | 0.5h left  * saved
+step 120000 |    6782s | train 1.1956 | val BPC 1.2042 | 0.4h left
+step 121000 |    6835s | train 1.1940 | val BPC 1.2025 | 0.4h left
+step 122000 |    6888s | train 1.1936 | val BPC 1.2009 | 0.4h left  * saved
+step 123000 |    6941s | train 1.1934 | val BPC 1.1996 | 0.4h left  * saved
+step 124000 |    6995s | train 1.1945 | val BPC 1.1999 | 0.4h left
+step 125000 |    7047s | train 1.1907 | val BPC 1.1992 | 0.4h left  * saved
+step 126000 |    7101s | train 1.1907 | val BPC 1.1982 | 0.4h left  * saved
+step 127000 |    7155s | train 1.1903 | val BPC 1.1973 | 0.3h left  * saved
+step 128000 |    7208s | train 1.1908 | val BPC 1.1964 | probe 78% | 0.3h left  * saved
+step 129000 |    7297s | train 1.1897 | val BPC 1.1970 | 0.3h left
+step 130000 |    7353s | train 1.1892 | val BPC 1.1957 | 0.3h left  * saved
+step 131000 |    7408s | train 1.1877 | val BPC 1.1951 | 0.3h left  * saved
+step 132000 |    7463s | train 1.1866 | val BPC 1.1943 | 0.3h left  * saved
+step 133000 |    7516s | train 1.1869 | val BPC 1.1946 | 0.3h left
+step 134000 |    7569s | train 1.1866 | val BPC 1.1940 | 0.2h left  * saved
+step 135000 |    7622s | train 1.1873 | val BPC 1.1918 | 0.2h left  * saved
+step 136000 |    7676s | train 1.1857 | val BPC 1.1923 | 0.2h left
+step 137000 |    7728s | train 1.1838 | val BPC 1.1920 | 0.2h left
+step 138000 |    7782s | train 1.1847 | val BPC 1.1918 | probe 74% | 0.2h left
+step 139000 |    7865s | train 1.1827 | val BPC 1.1908 | 0.2h left  * saved
+step 140000 |    7917s | train 1.1836 | val BPC 1.1913 | 0.2h left
+step 141000 |    7967s | train 1.1837 | val BPC 1.1905 | 0.1h left  * saved
+step 142000 |    8018s | train 1.1835 | val BPC 1.1902 | 0.1h left  * saved
+step 143000 |    8068s | train 1.1851 | val BPC 1.1901 | 0.1h left  * saved
+step 144000 |    8118s | train 1.1843 | val BPC 1.1884 | 0.1h left  * saved
+step 145000 |    8169s | train 1.1815 | val BPC 1.1893 | 0.1h left
+step 146000 |    8219s | train 1.1834 | val BPC 1.1884 | 0.1h left  * saved
+step 147000 |    8269s | train 1.1825 | val BPC 1.1878 | 0.0h left  * saved
+step 148000 |    8319s | train 1.1806 | val BPC 1.1888 | probe 74% | 0.0h left
+step 149000 |    8395s | train 1.1811 | val BPC 1.1894 | 0.0h left
+step 150000 |    8445s | train 1.1794 | val BPC 1.1885 | probe 75%
+best val BPC 1.1878 at step 147000 -> runs\p_main_cache_best.pt
+log -> runs\p_main_cache.csv
+final: best model, val BPC 1.1910 (20480 windows) | with at least 128 bytes of context: 1.1634 | next byte right 74.8% | first letters of words 3.363, other bytes 0.775
+final: best model, TEST BPC 1.2011 (20480 windows, never used for any choice) | with at least 128 bytes of context: 1.1738 | next byte right 74.5% | first letters of words 3.372, other bytes 0.784
+final: best model, knowledge probe 75.4% of 65 right
+samples -> runs\p_main_cache_samples.txt

@@ -1,0 +1,39 @@
+
+##### 2026-11-11 02:30:39
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 20000 --lr 0.0006 --warmup 1000 --dropout 0.05 --rope --out runs --tag p_pilot_cache_rope --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt --cache
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 5s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+--resume: no runs\p_pilot_cache_rope_last.pt yet, starting from scratch
+step      0 |       6s | train nan | val BPC 8.4680 | probe 31%  * saved
+step   1000 |      80s | train 2.2515 | val BPC 1.6199 | 0.4h left  * saved
+step   2000 |     129s | train 1.5421 | val BPC 1.5064 | 0.3h left  * saved
+step   3000 |     177s | train 1.4764 | val BPC 1.4744 | 0.3h left  * saved
+step   4000 |     225s | train 1.4462 | val BPC 1.4458 | 0.2h left  * saved
+step   5000 |     273s | train 1.4258 | val BPC 1.4351 | 0.2h left  * saved
+step   6000 |     321s | train 1.4095 | val BPC 1.4192 | 0.2h left  * saved
+step   7000 |     369s | train 1.3979 | val BPC 1.4047 | 0.2h left  * saved
+step   8000 |     417s | train 1.3865 | val BPC 1.3894 | 0.2h left  * saved
+step   9000 |     465s | train 1.3733 | val BPC 1.3800 | 0.2h left  * saved
+step  10000 |     513s | train 1.3644 | val BPC 1.3696 | probe 72% | 0.1h left  * saved
+step  11000 |     586s | train 1.3544 | val BPC 1.3605 | 0.1h left  * saved
+step  12000 |     635s | train 1.3458 | val BPC 1.3530 | 0.1h left  * saved
+step  13000 |     682s | train 1.3400 | val BPC 1.3440 | 0.1h left  * saved
+step  14000 |     731s | train 1.3329 | val BPC 1.3355 | 0.1h left  * saved
+step  15000 |     779s | train 1.3257 | val BPC 1.3315 | 0.1h left  * saved
+step  16000 |     827s | train 1.3200 | val BPC 1.3263 | 0.1h left  * saved
+step  17000 |     875s | train 1.3168 | val BPC 1.3207 | 0.0h left  * saved
+step  18000 |     923s | train 1.3117 | val BPC 1.3169 | 0.0h left  * saved
+step  19000 |     971s | train 1.3080 | val BPC 1.3147 | 0.0h left  * saved
+step  20000 |    1019s | train 1.3037 | val BPC 1.3126 | probe 75%  * saved
+best val BPC 1.3126 at step 20000 -> runs\p_pilot_cache_rope_best.pt
+log -> runs\p_pilot_cache_rope.csv
+final: best model, val BPC 1.3157 (20480 windows) | with at least 128 bytes of context: 1.2995
+final: best model, TEST BPC 1.3251 (20480 windows, never used for any choice) | with at least 128 bytes of context: 1.3091
+final: best model, knowledge probe 75.4% of 65 right
+samples -> runs\p_pilot_cache_rope_samples.txt

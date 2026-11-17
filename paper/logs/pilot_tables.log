@@ -1,0 +1,38 @@
+
+##### 2026-11-11 01:56:00
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 20000 --lr 0.0006 --warmup 1000 --dropout 0.05 --out runs --tag p_pilot_tables --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --hard_feature --words --load_hard runs\p_tab_hard.pt
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+hard model loaded from runs\p_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word'] | 1,085,025,992 table entries | 6s -> runs\p_tab_hard.pt
+transformer: 26.14M params | mode alone | hard input True | distill off
+--resume: no runs\p_pilot_tables_last.pt yet, starting from scratch
+step      0 |       6s | train nan | val BPC 8.1454 | probe 23%  * saved
+step   1000 |      58s | train 2.5172 | val BPC 1.7443 | 0.3h left  * saved
+step   2000 |      96s | train 1.6397 | val BPC 1.6072 | 0.2h left  * saved
+step   3000 |     134s | train 1.5651 | val BPC 1.5720 | 0.2h left  * saved
+step   4000 |     172s | train 1.5337 | val BPC 1.5471 | 0.2h left  * saved
+step   5000 |     209s | train 1.5111 | val BPC 1.5275 | 0.2h left  * saved
+step   6000 |     249s | train 1.4961 | val BPC 1.5154 | 0.2h left  * saved
+step   7000 |     287s | train 1.4835 | val BPC 1.5053 | 0.1h left  * saved
+step   8000 |     325s | train 1.4703 | val BPC 1.4927 | 0.1h left  * saved
+step   9000 |     363s | train 1.4624 | val BPC 1.4877 | 0.1h left  * saved
+step  10000 |     401s | train 1.4527 | val BPC 1.4751 | probe 78% | 0.1h left  * saved
+step  11000 |     452s | train 1.4458 | val BPC 1.4680 | 0.1h left  * saved
+step  12000 |     490s | train 1.4348 | val BPC 1.4600 | 0.1h left  * saved
+step  13000 |     528s | train 1.4322 | val BPC 1.4545 | 0.1h left  * saved
+step  14000 |     566s | train 1.4244 | val BPC 1.4477 | 0.1h left  * saved
+step  15000 |     603s | train 1.4200 | val BPC 1.4425 | 0.1h left  * saved
+step  16000 |     641s | train 1.4122 | val BPC 1.4384 | 0.0h left  * saved
+step  17000 |     679s | train 1.4085 | val BPC 1.4336 | 0.0h left  * saved
+step  18000 |     717s | train 1.4039 | val BPC 1.4303 | 0.0h left  * saved
+step  19000 |     754s | train 1.3997 | val BPC 1.4279 | 0.0h left  * saved
+step  20000 |     792s | train 1.3985 | val BPC 1.4258 | probe 80%  * saved
+best val BPC 1.4258 at step 20000 -> runs\p_pilot_tables_best.pt
+log -> runs\p_pilot_tables.csv
+final: best model, val BPC 1.4286 (20480 windows) | with at least 128 bytes of context: 1.4068
+final: best model, TEST BPC 1.4429 (20480 windows, never used for any choice) | with at least 128 bytes of context: 1.4202
+final: best model, knowledge probe 80.0% of 65 right
+samples -> runs\p_pilot_tables_samples.txt

@@ -1,0 +1,587 @@
+[
+ {
+  "prompt": "The capital of France is",
+  "answers": [
+   " Paris.",
+   " Rome.",
+   " Madrid.",
+   " Berlin."
+  ]
+ },
+ {
+  "prompt": "The capital of Japan is",
+  "answers": [
+   " Tokyo.",
+   " Seoul.",
+   " Beijing.",
+   " Bangkok."
+  ]
+ },
+ {
+  "prompt": "The capital of Italy is",
+  "answers": [
+   " Rome.",
+   " Paris.",
+   " Vienna.",
+   " Athens."
+  ]
+ },
+ {
+  "prompt": "The capital of Germany is",
+  "answers": [
+   " Berlin.",
+   " London.",
+   " Madrid.",
+   " Warsaw."
+  ]
+ },
+ {
+  "prompt": "The capital of the United Kingdom is",
+  "answers": [
+   " London.",
+   " Dublin.",
+   " Paris.",
+   " Berlin."
+  ]
+ },
+ {
+  "prompt": "The largest ocean on Earth is the",
+  "answers": [
+   " Pacific Ocean.",
+   " Atlantic Ocean.",
+   " Indian Ocean.",
+   " Arctic Ocean."
+  ]
+ },
+ {
+  "prompt": "The longest river in Africa is the",
+  "answers": [
+   " Nile.",
+   " Congo.",
+   " Niger.",
+   " Volga."
+  ]
+ },
+ {
+  "prompt": "Mount Everest is in the",
+  "answers": [
+   " Himalayas.",
+   " Alps.",
+   " Andes.",
+   " Rockies."
+  ]
+ },
+ {
+  "prompt": "The Sahara is a very large",
+  "answers": [
+   " desert.",
+   " forest.",
+   " island.",
+   " glacier."
+  ]
+ },
+ {
+  "prompt": "The Amazon rainforest is in South",
+  "answers": [
+   " America.",
+   " Africa.",
+   " Korea.",
+   " Dakota."
+  ]
+ },
+ {
+  "prompt": "The Great Wall is in",
+  "answers": [
+   " China.",
+   " Chile.",
+   " Chad.",
+   " Cuba."
+  ]
+ },
+ {
+  "prompt": "The Eiffel Tower is in",
+  "answers": [
+   " Paris.",
+   " Rome.",
+   " Cairo.",
+   " Tokyo."
+  ]
+ },
+ {
+  "prompt": "Water is made of hydrogen and",
+  "answers": [
+   " oxygen.",
+   " nitrogen.",
+   " carbon.",
+   " helium."
+  ]
+ },
+ {
+  "prompt": "The chemical formula for water is",
+  "answers": [
+   " H2O.",
+   " CO2.",
+   " NaCl.",
+   " CH4."
+  ]
+ },
+ {
+  "prompt": "Plants make their own food through a process called",
+  "answers": [
+   " photosynthesis.",
+   " respiration.",
+   " fermentation.",
+   " evaporation."
+  ]
+ },
+ {
+  "prompt": "The Earth revolves around the",
+  "answers": [
+   " Sun.",
+   " Moon.",
+   " Mars.",
+   " Venus."
+  ]
+ },
+ {
+  "prompt": "The planet closest to the Sun is",
+  "answers": [
+   " Mercury.",
+   " Jupiter.",
+   " Neptune.",
+   " Saturn."
+  ]
+ },
+ {
+  "prompt": "The force that pulls objects toward the Earth is called",
+  "answers": [
+   " gravity.",
+   " friction.",
+   " magnetism.",
+   " pressure."
+  ]
+ },
+ {
+  "prompt": "The heart pumps",
+  "answers": [
+   " blood.",
+   " water.",
+   " air.",
+   " milk."
+  ]
+ },
+ {
+  "prompt": "We breathe in oxygen and breathe out carbon",
+  "answers": [
+   " dioxide.",
+   " monoxide.",
+   " nitrate.",
+   " sulfate."
+  ]
+ },
+ {
+  "prompt": "Ice is the solid form of",
+  "answers": [
+   " water.",
+   " metal.",
+   " sand.",
+   " wood."
+  ]
+ },
+ {
+  "prompt": "The basic unit of life is the",
+  "answers": [
+   " cell.",
+   " atom.",
+   " organ.",
+   " tissue."
+  ]
+ },
+ {
+  "prompt": "DNA carries genetic",
+  "answers": [
+   " information.",
+   " electricity.",
+   " temperature.",
+   " atmosphere."
+  ]
+ },
+ {
+  "prompt": "Light travels much faster than",
+  "answers": [
+   " sound.",
+   " water.",
+   " paper.",
+   " music."
+  ]
+ },
+ {
+  "prompt": "At sea level, water boils at 100 degrees",
+  "answers": [
+   " Celsius.",
+   " Fahrenheit.",
+   " Kelvin.",
+   " latitude."
+  ]
+ },
+ {
+  "prompt": "The Moon orbits the",
+  "answers": [
+   " Earth.",
+   " Sun.",
+   " Mars.",
+   " Venus."
+  ]
+ },
+ {
+  "prompt": "The nucleus of an atom contains protons and",
+  "answers": [
+   " neutrons.",
+   " electrons.",
+   " photons.",
+   " molecules."
+  ]
+ },
+ {
+  "prompt": "Two plus two equals",
+  "answers": [
+   " four.",
+   " five.",
+   " three.",
+   " six."
+  ]
+ },
+ {
+  "prompt": "Ten times ten equals one",
+  "answers": [
+   " hundred.",
+   " thousand.",
+   " million.",
+   " dozen."
+  ]
+ },
+ {
+  "prompt": "A triangle has three",
+  "answers": [
+   " sides.",
+   " wheels.",
+   " pages.",
+   " doors."
+  ]
+ },
+ {
+  "prompt": "There are seven days in a",
+  "answers": [
+   " week.",
+   " month.",
+   " year.",
+   " decade."
+  ]
+ },
+ {
+  "prompt": "There are sixty minutes in an",
+  "answers": [
+   " hour.",
+   " inch.",
+   " acre.",
+   " ounce."
+  ]
+ },
+ {
+  "prompt": "There are twelve months in a",
+  "answers": [
+   " year.",
+   " week.",
+   " day.",
+   " mile."
+  ]
+ },
+ {
+  "prompt": "Half of one hundred is",
+  "answers": [
+   " fifty.",
+   " forty.",
+   " sixty.",
+   " thirty."
+  ]
+ },
+ {
+  "prompt": "A square has four equal",
+  "answers": [
+   " sides.",
+   " wings.",
+   " seasons.",
+   " colors."
+  ]
+ },
+ {
+  "prompt": "The dogs in the yard",
+  "answers": [
+   " are barking.",
+   " is barking.",
+   " am barking.",
+   " be barking."
+  ]
+ },
+ {
+  "prompt": "Yesterday, she",
+  "answers": [
+   " went to the market.",
+   " goes to the market.",
+   " go to the market.",
+   " going to the market."
+  ]
+ },
+ {
+  "prompt": "He doesn't",
+  "answers": [
+   " like vegetables.",
+   " likes vegetables.",
+   " liked vegetables.",
+   " liking vegetables."
+  ]
+ },
+ {
+  "prompt": "They have been",
+  "answers": [
+   " waiting for an hour.",
+   " waited for an hour.",
+   " wait for an hour.",
+   " waits for an hour."
+  ]
+ },
+ {
+  "prompt": "An apple a day keeps the doctor",
+  "answers": [
+   " away.",
+   " here.",
+   " busy.",
+   " late."
+  ]
+ },
+ {
+  "prompt": "The opposite of hot is",
+  "answers": [
+   " cold.",
+   " warm.",
+   " fire.",
+   " heat."
+  ]
+ },
+ {
+  "prompt": "The opposite of up is",
+  "answers": [
+   " down.",
+   " over.",
+   " high.",
+   " left."
+  ]
+ },
+ {
+  "prompt": "The opposite of big is",
+  "answers": [
+   " small.",
+   " large.",
+   " huge.",
+   " tall."
+  ]
+ },
+ {
+  "prompt": "The plural of child is",
+  "answers": [
+   " children.",
+   " childs.",
+   " childes.",
+   " childer."
+  ]
+ },
+ {
+  "prompt": "The past tense of run is",
+  "answers": [
+   " ran.",
+   " runned.",
+   " rans.",
+   " running."
+  ]
+ },
+ {
+  "prompt": "Monday, Tuesday, Wednesday,",
+  "answers": [
+   " Thursday,",
+   " Saturday,",
+   " Sunday,",
+   " Monday,"
+  ]
+ },
+ {
+  "prompt": "January, February, March,",
+  "answers": [
+   " April,",
+   " June,",
+   " August,",
+   " October,"
+  ]
+ },
+ {
+  "prompt": "one, two, three, four,",
+  "answers": [
+   " five,",
+   " six,",
+   " nine,",
+   " ten,"
+  ]
+ },
+ {
+  "prompt": "spring, summer, autumn and",
+  "answers": [
+   " winter.",
+   " summer.",
+   " monsoon.",
+   " morning."
+  ]
+ },
+ {
+  "prompt": "Bees make",
+  "answers": [
+   " honey.",
+   " milk.",
+   " silk.",
+   " wool."
+  ]
+ },
+ {
+  "prompt": "Cows give us",
+  "answers": [
+   " milk.",
+   " eggs.",
+   " wool.",
+   " honey."
+  ]
+ },
+ {
+  "prompt": "Birds fly with their",
+  "answers": [
+   " wings.",
+   " fins.",
+   " paws.",
+   " roots."
+  ]
+ },
+ {
+  "prompt": "Fish live in",
+  "answers": [
+   " water.",
+   " trees.",
+   " caves.",
+   " nests."
+  ]
+ },
+ {
+  "prompt": "We see with our",
+  "answers": [
+   " eyes.",
+   " ears.",
+   " nose.",
+   " feet."
+  ]
+ },
+ {
+  "prompt": "We hear with our",
+  "answers": [
+   " ears.",
+   " eyes.",
+   " hands.",
+   " teeth."
+  ]
+ },
+ {
+  "prompt": "The sun rises in the",
+  "answers": [
+   " east.",
+   " west.",
+   " north.",
+   " south."
+  ]
+ },
+ {
+  "prompt": "A year has four",
+  "answers": [
+   " seasons.",
+   " months.",
+   " weeks.",
+   " hours."
+  ]
+ },
+ {
+  "prompt": "Doctors work in",
+  "answers": [
+   " hospitals.",
+   " bakeries.",
+   " stadiums.",
+   " theaters."
+  ]
+ },
+ {
+  "prompt": "Teachers work in",
+  "answers": [
+   " schools.",
+   " prisons.",
+   " airports.",
+   " forests."
+  ]
+ },
+ {
+  "prompt": "To write on paper, you can use a",
+  "answers": [
+   " pen.",
+   " fork.",
+   " shoe.",
+   " lamp."
+  ]
+ },
+ {
+  "prompt": "When it rains, people often carry an",
+  "answers": [
+   " umbrella.",
+   " envelope.",
+   " elephant.",
+   " orchestra."
+  ]
+ },
+ {
+  "prompt": "The first person to walk on the Moon was Neil",
+  "answers": [
+   " Armstrong.",
+   " Anderson.",
+   " Robinson.",
+   " Williams."
+  ]
+ },
+ {
+  "prompt": "William Shakespeare wrote the play Romeo and",
+  "answers": [
+   " Juliet.",
+   " Julius.",
+   " Helena.",
+   " Ophelia."
+  ]
+ },
+ {
+  "prompt": "Albert Einstein developed the theory of",
+  "answers": [
+   " relativity.",
+   " evolution.",
+   " democracy.",
+   " probability."
+  ]
+ },
+ {
+  "prompt": "Charles Darwin is known for the theory of",
+  "answers": [
+   " evolution.",
+   " relativity.",
+   " electricity.",
+   " probability."
+  ]
+ }
+]

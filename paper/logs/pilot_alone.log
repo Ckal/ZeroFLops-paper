@@ -1,0 +1,36 @@
+
+##### 2026-11-11 01:45:44
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --d 512 --layers 8 --heads 8 --ctx 256 --batch 64 --steps 20000 --lr 0.0006 --warmup 1000 --dropout 0.05 --out runs --tag p_pilot_alone --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+transformer: 25.61M params | mode alone | hard input False | distill off
+--resume: no runs\p_pilot_alone_last.pt yet, starting from scratch
+step      0 |       0s | train nan | val BPC 8.3438 | probe 31%  * saved
+step   1000 |      32s | train 3.4254 | val BPC 2.4298 | 0.2h left  * saved
+step   2000 |      61s | train 2.2018 | val BPC 2.0223 | 0.2h left  * saved
+step   3000 |      90s | train 1.9639 | val BPC 1.8705 | 0.1h left  * saved
+step   4000 |     118s | train 1.8644 | val BPC 1.8022 | 0.1h left  * saved
+step   5000 |     148s | train 1.8116 | val BPC 1.7597 | 0.1h left  * saved
+step   6000 |     177s | train 1.7728 | val BPC 1.7289 | 0.1h left  * saved
+step   7000 |     206s | train 1.7450 | val BPC 1.7037 | 0.1h left  * saved
+step   8000 |     235s | train 1.7188 | val BPC 1.6805 | 0.1h left  * saved
+step   9000 |     263s | train 1.6973 | val BPC 1.6617 | 0.1h left  * saved
+step  10000 |     292s | train 1.6802 | val BPC 1.6419 | probe 57% | 0.1h left  * saved
+step  11000 |     324s | train 1.6627 | val BPC 1.6281 | 0.1h left  * saved
+step  12000 |     352s | train 1.6478 | val BPC 1.6116 | 0.1h left  * saved
+step  13000 |     381s | train 1.6340 | val BPC 1.5980 | 0.1h left  * saved
+step  14000 |     410s | train 1.6189 | val BPC 1.5855 | 0.0h left  * saved
+step  15000 |     438s | train 1.6104 | val BPC 1.5764 | 0.0h left  * saved
+step  16000 |     467s | train 1.6005 | val BPC 1.5663 | 0.0h left  * saved
+step  17000 |     496s | train 1.5905 | val BPC 1.5588 | 0.0h left  * saved
+step  18000 |     525s | train 1.5840 | val BPC 1.5527 | 0.0h left  * saved
+step  19000 |     553s | train 1.5776 | val BPC 1.5471 | 0.0h left  * saved
+step  20000 |     582s | train 1.5759 | val BPC 1.5442 | probe 58%  * saved
+best val BPC 1.5442 at step 20000 -> runs\p_pilot_alone_best.pt
+log -> runs\p_pilot_alone.csv
+final: best model, val BPC 1.5464 (20480 windows) | with at least 128 bytes of context: 1.4764
+final: best model, TEST BPC 1.5504 (20480 windows, never used for any choice) | with at least 128 bytes of context: 1.4795
+final: best model, knowledge probe 58.5% of 65 right
+samples -> runs\p_pilot_alone_samples.txt

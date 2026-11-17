@@ -1,0 +1,73 @@
+
+##### 2026-11-10 23:47:13
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --mode hard --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --words --cache --check_loo --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample 0 --out runs --tag p_tab
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+building the hard model ...
+  ngram orders 1..5: 51,833,018 entries, 208s
+  long contexts [8, 12, 16] (seen >= 2x): 735,229,340 entries, 768s
+word classes: 50,000 words -> 254 classes (co-occurrence), 117s
+   class  77: it he there what she god someone jesus everyone anyone
+   class  89: as which but if when ” because where while however
+   class  97: an no high low term higher similar certain lower increased
+   class 113: a this their one his your these each her another
+Traceback (most recent call last):
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1817, in <module>
+    main(a)
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 1459, in main
+    hm = HardModel.build(src, args, args.device, teacher)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 609, in build
+    hm.word_tabs.append(c.table())
+                        ^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py", line 428, in table
+    u, inv = np.unique(up, return_inverse=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Lib\site-packages\numpy\lib\_arraysetops_impl.py", line 296, in unique
+    ret = _unique1d(ar, return_index, return_inverse, return_counts,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Lib\site-packages\numpy\lib\_arraysetops_impl.py", line 407, in _unique1d
+    imask = np.cumsum(mask) - 1
+            ^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Lib\site-packages\numpy\_core\fromnumeric.py", line 2914, in cumsum
+    return _wrapfunc(a, 'cumsum', axis=axis, dtype=dtype, out=out)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Lib\site-packages\numpy\_core\fromnumeric.py", line 54, in _wrapfunc
+    return bound(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 1.61 GiB for an array with shape (215569209,) and data type int64
+
+##### 2026-11-11 01:20:03
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --mode hard --data data/smollm_subset_2GB.txt --val_data data/smollm_subset_200MB.txt --test_mb 10 --words --cache --check_loo --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample 0 --out runs --tag p_tab
+removed 20,971,520 bytes of validation text from the training data, found between byte 9,437,184 and 208,666,624
+test set: 10 blocks of 1 MB from the second half of the training text, removed from it
+test text -> runs\smollm_subset_2GB_test10mb.txt  (score models on it with --mode eval --test_file)
+data: 2,064,646,144 train bytes, 20,971,520 val bytes
+building the hard model ...
+  ngram orders 1..5: 51,833,018 entries, 162s
+  long contexts [8, 12, 16] (seen >= 2x): 735,229,340 entries, 762s
+word classes: 50,000 words -> 254 classes (co-occurrence), 116s
+   class  77: it he there what she god someone jesus everyone anyone
+   class  89: as which but if when ” because where while however
+   class  97: an no high low term higher similar certain lower increased
+   class 113: a this their one his your these each her another
+  word contexts: 297,963,634 entries, 444s
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 1,085,025,992 table entries | 1518s -> runs\p_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+  ngram_o2    val BPC 3.0554
+  ngram       val BPC 1.9107   <- main
+  ngram_long  val BPC 1.6275
+  word        val BPC 1.8702
+  cache       val BPC 3.2622
+  ngram_long blended with 10% cache: val BPC 1.5371  (-0.0904)
+  ngram_long blended with 20% cache: val BPC 1.5472  (-0.0803)
+  ngram_long blended with 30% cache: val BPC 1.5805  (-0.0470)
+leave-one-out check (bits per byte of each expert):
+                                        ngram_o2       ngram  ngram_long        word       cache
+  validation text                         3.0554      1.9107      1.6275      1.8702      3.2622
+  counted text, own byte left out         3.0532      1.8979      1.6079      1.8586      3.2690
+    minus validation                     -0.0022     -0.0128     -0.0196     -0.0116     +0.0068
+  knowledge probe, tables alone: 72.3% of 65 right
+saved -> runs\p_tab_best.pt

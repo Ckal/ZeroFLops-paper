@@ -1,0 +1,9 @@
+# One prompt per line. \n inside a line means a line break. Lines starting with # are ignored.
+The capital of France is
+Once upon a time, there was a little
+The main causes of the First World War were
+Photosynthesis is the process by which
+To make a cup of tea, first
+In mathematics, a prime number is
+The teacher asked the students to
+Question: Why is the sky blue?\nAnswer:

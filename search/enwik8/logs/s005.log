@@ -1,0 +1,14 @@
+C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/enwik8.train --val_file data/enwik8.valid --hard_feature --words --cache --rope --d 512 --layers 8 --heads 8 --ctx 512 --batch 32 --steps 20000 --eval_every 5000 --patience 0 --sample 0 --save_every 0 --seed 0 --out search\enwik8\runs --tag s005 --load_hard runs/p_e8_tab_hard.pt --lr 0.0006 --warmup 2000 --min_lr_frac 0.1 --weight_decay 0.1 --dropout 0.2 --arch classic --doc_hist 8192 --cache_keep 8 --cache_orders 2,3,4,6,8,12,16 --mem_drop 0.0
+
+data: 90,000,000 train bytes, 5,000,000 val bytes
+hard model loaded from runs/p_e8_tab_hard.pt
+hard model: experts ['ngram_o2', 'ngram', 'ngram_long', 'word', 'cache'] | 81,785,402 table entries | 1s -> search\enwik8\runs\..\..\..\runs\p_e8_tab_hard.pt
+document memory: looks back 8192 bytes | cache contexts [2, 3, 4, 6, 8, 12, 16]
+transformer: 26.15M params | mode alone | hard input True | distill off
+step      0 |       2s | train nan | val BPC 8.4157  * saved
+step   5000 |     251s | train 1.6661 | val BPC 1.3942 | 0.2h left  * saved
+step  10000 |     500s | train 1.2887 | val BPC 1.3044 | 0.1h left  * saved
+step  15000 |     751s | train 1.2222 | val BPC 1.2527 | 0.1h left  * saved
+step  20000 |    1001s | train 1.1830 | val BPC 1.2298  * saved
+best val BPC 1.2298 at step 20000 -> search\enwik8\runs\s005_best.pt
+log -> search\enwik8\runs\s005.csv

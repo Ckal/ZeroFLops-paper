@@ -1,0 +1,263 @@
+
+##### 2026-11-14 21:12:04
+##### C:\Users\<user>\projects\ZeroFLops-paper\.venv-c4\Scripts\python.exe C:\Users\<user>\projects\ZeroFLops-paper\hard_residual_lm.py --data data/enwik8.train --val_file data/enwik8.valid --test_file data/enwik8.test --d 768 --layers 12 --heads 12 --ctx 1024 --batch 16 --steps 250000 --lr 0.0003 --warmup 2000 --dropout 0.3 --rope --out runs --tag p_e8b_alone --eval_every 1000 --patience 0 --final_eval_windows 20480 --sample 0 --resume --save_every 2 --prompts C:\Users\<user>\projects\ZeroFLops-paper\prompts.txt --probe C:\Users\<user>\projects\ZeroFLops-paper\probe.json --sample_every 10 --sample_len 160 --slide_eval --arch modern --weight_decay 0.1 --min_lr_frac 0.1
+data: 90,000,000 train bytes, 5,000,000 val bytes
+transformer: 85.35M params | mode alone | hard input False | distill off
+--resume: no runs\p_e8b_alone_last.pt yet, starting from scratch
+step      0 |       4s | train nan | val BPC 8.2260 | probe 28%  * saved
+step   1000 |     139s | train 3.4291 | val BPC 2.3877 | 9.6h left  * saved
+step   2000 |     257s | train 2.2221 | val BPC 1.9924 | 8.9h left  * saved
+step   3000 |     375s | train 1.8603 | val BPC 1.6770 | 8.6h left  * saved
+step   4000 |     494s | train 1.6879 | val BPC 1.5864 | 8.4h left  * saved
+step   5000 |     612s | train 1.6095 | val BPC 1.5373 | 8.3h left  * saved
+step   6000 |     730s | train 1.5529 | val BPC 1.5005 | 8.3h left  * saved
+step   7000 |     848s | train 1.5176 | val BPC 1.4679 | 8.2h left  * saved
+step   8000 |     967s | train 1.4816 | val BPC 1.4484 | 8.1h left  * saved
+step   9000 |    1085s | train 1.4625 | val BPC 1.4255 | 8.1h left  * saved
+step  10000 |    1203s | train 1.4381 | val BPC 1.4114 | probe 45% | 8.1h left  * saved
+step  11000 |    1338s | train 1.4198 | val BPC 1.3939 | 8.1h left  * saved
+step  12000 |    1457s | train 1.4044 | val BPC 1.3833 | 8.0h left  * saved
+step  13000 |    1575s | train 1.3862 | val BPC 1.3754 | 8.0h left  * saved
+step  14000 |    1693s | train 1.3743 | val BPC 1.3647 | 7.9h left  * saved
+step  15000 |    1811s | train 1.3658 | val BPC 1.3525 | 7.9h left  * saved
+step  16000 |    1930s | train 1.3489 | val BPC 1.3458 | 7.8h left  * saved
+step  17000 |    2048s | train 1.3456 | val BPC 1.3330 | 7.8h left  * saved
+step  18000 |    2166s | train 1.3292 | val BPC 1.3309 | 7.8h left  * saved
+step  19000 |    2284s | train 1.3251 | val BPC 1.3280 | 7.7h left  * saved
+step  20000 |    2403s | train 1.3181 | val BPC 1.3155 | probe 57% | 7.7h left  * saved
+step  21000 |    2537s | train 1.3127 | val BPC 1.3164 | 7.7h left
+step  22000 |    2656s | train 1.3058 | val BPC 1.3109 | 7.6h left  * saved
+step  23000 |    2773s | train 1.2944 | val BPC 1.3041 | 7.6h left  * saved
+step  24000 |    2892s | train 1.2913 | val BPC 1.3030 | 7.6h left  * saved
+step  25000 |    3010s | train 1.2850 | val BPC 1.2952 | 7.5h left  * saved
+step  26000 |    3128s | train 1.2784 | val BPC 1.2896 | 7.5h left  * saved
+step  27000 |    3246s | train 1.2759 | val BPC 1.2867 | 7.4h left  * saved
+step  28000 |    3365s | train 1.2737 | val BPC 1.2818 | 7.4h left  * saved
+step  29000 |    3482s | train 1.2707 | val BPC 1.2787 | 7.4h left  * saved
+step  30000 |    3601s | train 1.2630 | val BPC 1.2781 | probe 51% | 7.4h left  * saved
+step  31000 |    3736s | train 1.2567 | val BPC 1.2743 | 7.3h left  * saved
+step  32000 |    3855s | train 1.2544 | val BPC 1.2671 | 7.3h left  * saved
+step  33000 |    3973s | train 1.2513 | val BPC 1.2688 | 7.3h left
+step  34000 |    4091s | train 1.2447 | val BPC 1.2666 | 7.2h left  * saved
+step  35000 |    4209s | train 1.2397 | val BPC 1.2576 | 7.2h left  * saved
+step  36000 |    4327s | train 1.2354 | val BPC 1.2604 | 7.1h left
+step  37000 |    4445s | train 1.2359 | val BPC 1.2554 | 7.1h left  * saved
+step  38000 |    4563s | train 1.2352 | val BPC 1.2539 | 7.1h left  * saved
+step  39000 |    4681s | train 1.2301 | val BPC 1.2524 | 7.0h left  * saved
+step  40000 |    4799s | train 1.2262 | val BPC 1.2475 | probe 49% | 7.0h left  * saved
+step  41000 |    4935s | train 1.2248 | val BPC 1.2477 | 7.0h left
+step  42000 |    5053s | train 1.2206 | val BPC 1.2451 | 7.0h left  * saved
+step  43000 |    5171s | train 1.2204 | val BPC 1.2457 | 6.9h left
+step  44000 |    5289s | train 1.2217 | val BPC 1.2435 | 6.9h left  * saved
+step  45000 |    5407s | train 1.2078 | val BPC 1.2430 | 6.8h left  * saved
+step  46000 |    5525s | train 1.2153 | val BPC 1.2441 | 6.8h left
+step  47000 |    5643s | train 1.2098 | val BPC 1.2372 | 6.8h left  * saved
+step  48000 |    5761s | train 1.2061 | val BPC 1.2372 | 6.7h left  * saved
+step  49000 |    5879s | train 1.2034 | val BPC 1.2350 | 6.7h left  * saved
+step  50000 |    5998s | train 1.2037 | val BPC 1.2349 | probe 58% | 6.7h left  * saved
+step  51000 |    6132s | train 1.1995 | val BPC 1.2325 | 6.6h left  * saved
+step  52000 |    6250s | train 1.1938 | val BPC 1.2337 | 6.6h left
+step  53000 |    6368s | train 1.1960 | val BPC 1.2324 | 6.6h left  * saved
+step  54000 |    6486s | train 1.1892 | val BPC 1.2269 | 6.5h left  * saved
+step  55000 |    6604s | train 1.1941 | val BPC 1.2266 | 6.5h left  * saved
+step  56000 |    6723s | train 1.1900 | val BPC 1.2270 | 6.5h left
+step  57000 |    6840s | train 1.1867 | val BPC 1.2236 | 6.4h left  * saved
+step  58000 |    6959s | train 1.1846 | val BPC 1.2232 | 6.4h left  * saved
+step  59000 |    7076s | train 1.1825 | val BPC 1.2198 | 6.4h left  * saved
+step  60000 |    7195s | train 1.1804 | val BPC 1.2253 | probe 52% | 6.3h left
+step  61000 |    7328s | train 1.1753 | val BPC 1.2221 | 6.3h left
+step  62000 |    7447s | train 1.1785 | val BPC 1.2179 | 6.3h left  * saved
+step  63000 |    7565s | train 1.1758 | val BPC 1.2203 | 6.2h left
+step  64000 |    7683s | train 1.1771 | val BPC 1.2184 | 6.2h left
+step  65000 |    7800s | train 1.1719 | val BPC 1.2233 | 6.2h left
+step  66000 |    7919s | train 1.1721 | val BPC 1.2190 | 6.1h left
+step  67000 |    8036s | train 1.1714 | val BPC 1.2144 | 6.1h left  * saved
+step  68000 |    8155s | train 1.1701 | val BPC 1.2181 | 6.1h left
+step  69000 |    8272s | train 1.1657 | val BPC 1.2124 | 6.0h left  * saved
+step  70000 |    8390s | train 1.1658 | val BPC 1.2110 | probe 60% | 6.0h left  * saved
+step  71000 |    8525s | train 1.1632 | val BPC 1.2102 | 6.0h left  * saved
+step  72000 |    8643s | train 1.1628 | val BPC 1.2129 | 5.9h left
+step  73000 |    8761s | train 1.1618 | val BPC 1.2102 | 5.9h left
+step  74000 |    8879s | train 1.1551 | val BPC 1.2092 | 5.9h left  * saved
+step  75000 |    8997s | train 1.1582 | val BPC 1.2086 | 5.8h left  * saved
+step  76000 |    9115s | train 1.1567 | val BPC 1.2084 | 5.8h left  * saved
+step  77000 |    9233s | train 1.1550 | val BPC 1.2081 | 5.8h left  * saved
+step  78000 |    9352s | train 1.1524 | val BPC 1.2053 | 5.7h left  * saved
+step  79000 |    9469s | train 1.1522 | val BPC 1.2095 | 5.7h left
+step  80000 |    9588s | train 1.1465 | val BPC 1.2040 | probe 65% | 5.7h left  * saved
+step  81000 |    9722s | train 1.1464 | val BPC 1.2013 | 5.6h left  * saved
+step  82000 |    9841s | train 1.1474 | val BPC 1.1999 | 5.6h left  * saved
+step  83000 |    9959s | train 1.1417 | val BPC 1.2011 | 5.6h left
+step  84000 |   10077s | train 1.1461 | val BPC 1.2027 | 5.5h left
+step  85000 |   10194s | train 1.1445 | val BPC 1.1998 | 5.5h left  * saved
+step  86000 |   10313s | train 1.1373 | val BPC 1.1994 | 5.5h left  * saved
+step  87000 |   10430s | train 1.1393 | val BPC 1.1961 | 5.4h left  * saved
+step  88000 |   10549s | train 1.1393 | val BPC 1.2011 | 5.4h left
+step  89000 |   10666s | train 1.1381 | val BPC 1.1943 | 5.4h left  * saved
+step  90000 |   10785s | train 1.1351 | val BPC 1.1962 | probe 55% | 5.3h left
+step  91000 |   10918s | train 1.1332 | val BPC 1.1940 | 5.3h left  * saved
+step  92000 |   11037s | train 1.1332 | val BPC 1.1970 | 5.3h left
+step  93000 |   11155s | train 1.1300 | val BPC 1.1922 | 5.2h left  * saved
+step  94000 |   11273s | train 1.1283 | val BPC 1.1929 | 5.2h left
+step  95000 |   11390s | train 1.1335 | val BPC 1.1881 | 5.2h left  * saved
+step  96000 |   11509s | train 1.1286 | val BPC 1.1921 | 5.1h left
+step  97000 |   11626s | train 1.1240 | val BPC 1.1915 | 5.1h left
+step  98000 |   11744s | train 1.1243 | val BPC 1.1887 | 5.1h left
+step  99000 |   11862s | train 1.1219 | val BPC 1.1909 | 5.0h left
+step 100000 |   11980s | train 1.1195 | val BPC 1.1893 | probe 62% | 5.0h left
+step 101000 |   12114s | train 1.1193 | val BPC 1.1887 | 5.0h left
+step 102000 |   12232s | train 1.1214 | val BPC 1.1870 | 4.9h left  * saved
+step 103000 |   12350s | train 1.1187 | val BPC 1.1871 | 4.9h left
+step 104000 |   12468s | train 1.1174 | val BPC 1.1844 | 4.9h left  * saved
+step 105000 |   12586s | train 1.1181 | val BPC 1.1859 | 4.8h left
+step 106000 |   12704s | train 1.1161 | val BPC 1.1846 | 4.8h left
+step 107000 |   12821s | train 1.1156 | val BPC 1.1842 | 4.8h left  * saved
+step 108000 |   12940s | train 1.1135 | val BPC 1.1884 | 4.7h left
+step 109000 |   13057s | train 1.1107 | val BPC 1.1814 | 4.7h left  * saved
+step 110000 |   13176s | train 1.1066 | val BPC 1.1844 | probe 63% | 4.7h left
+step 111000 |   13310s | train 1.1052 | val BPC 1.1819 | 4.6h left
+step 112000 |   13429s | train 1.1086 | val BPC 1.1805 | 4.6h left  * saved
+step 113000 |   13546s | train 1.1068 | val BPC 1.1816 | 4.6h left
+step 114000 |   13665s | train 1.1068 | val BPC 1.1789 | 4.5h left  * saved
+step 115000 |   13782s | train 1.1056 | val BPC 1.1807 | 4.5h left
+step 116000 |   13901s | train 1.0980 | val BPC 1.1811 | 4.5h left
+step 117000 |   14018s | train 1.1046 | val BPC 1.1773 | 4.4h left  * saved
+step 118000 |   14137s | train 1.1001 | val BPC 1.1819 | 4.4h left
+step 119000 |   14254s | train 1.0978 | val BPC 1.1753 | 4.4h left  * saved
+step 120000 |   14373s | train 1.0939 | val BPC 1.1788 | probe 62% | 4.3h left
+step 121000 |   14507s | train 1.1004 | val BPC 1.1788 | 4.3h left
+step 122000 |   14626s | train 1.0939 | val BPC 1.1767 | 4.3h left
+step 123000 |   14743s | train 1.0927 | val BPC 1.1731 | 4.2h left  * saved
+step 124000 |   14862s | train 1.0930 | val BPC 1.1757 | 4.2h left
+step 125000 |   14979s | train 1.0896 | val BPC 1.1768 | 4.2h left
+step 126000 |   15098s | train 1.0892 | val BPC 1.1716 | 4.1h left  * saved
+step 127000 |   15215s | train 1.0900 | val BPC 1.1737 | 4.1h left
+step 128000 |   15334s | train 1.0885 | val BPC 1.1700 | 4.1h left  * saved
+step 129000 |   15452s | train 1.0838 | val BPC 1.1735 | 4.0h left
+step 130000 |   15570s | train 1.0811 | val BPC 1.1713 | probe 60% | 4.0h left
+step 131000 |   15703s | train 1.0871 | val BPC 1.1695 | 4.0h left  * saved
+step 132000 |   15822s | train 1.0778 | val BPC 1.1690 | 3.9h left  * saved
+step 133000 |   15939s | train 1.0840 | val BPC 1.1699 | 3.9h left
+step 134000 |   16058s | train 1.0764 | val BPC 1.1698 | 3.9h left
+step 135000 |   16175s | train 1.0827 | val BPC 1.1728 | 3.8h left
+step 136000 |   16293s | train 1.0741 | val BPC 1.1679 | 3.8h left  * saved
+step 137000 |   16411s | train 1.0812 | val BPC 1.1636 | 3.8h left  * saved
+step 138000 |   16530s | train 1.0774 | val BPC 1.1722 | 3.7h left
+step 139000 |   16647s | train 1.0720 | val BPC 1.1720 | 3.7h left
+step 140000 |   16765s | train 1.0704 | val BPC 1.1676 | probe 69% | 3.7h left
+step 141000 |   16899s | train 1.0769 | val BPC 1.1698 | 3.6h left
+step 142000 |   17017s | train 1.0705 | val BPC 1.1614 | 3.6h left  * saved
+step 143000 |   17135s | train 1.0706 | val BPC 1.1659 | 3.6h left
+step 144000 |   17254s | train 1.0692 | val BPC 1.1621 | 3.5h left
+step 145000 |   17371s | train 1.0659 | val BPC 1.1689 | 3.5h left
+step 146000 |   17489s | train 1.0640 | val BPC 1.1682 | 3.5h left
+step 147000 |   17606s | train 1.0639 | val BPC 1.1619 | 3.4h left
+step 148000 |   17724s | train 1.0632 | val BPC 1.1642 | 3.4h left
+step 149000 |   17841s | train 1.0602 | val BPC 1.1651 | 3.4h left
+step 150000 |   17959s | train 1.0640 | val BPC 1.1638 | probe 65% | 3.3h left
+step 151000 |   18086s | train 1.0619 | val BPC 1.1669 | 3.3h left
+step 152000 |   18204s | train 1.0615 | val BPC 1.1611 | 3.3h left  * saved
+step 153000 |   18322s | train 1.0599 | val BPC 1.1598 | 3.2h left  * saved
+step 154000 |   18440s | train 1.0564 | val BPC 1.1619 | 3.2h left
+step 155000 |   18557s | train 1.0498 | val BPC 1.1587 | 3.2h left  * saved
+step 156000 |   18675s | train 1.0574 | val BPC 1.1652 | 3.1h left
+step 157000 |   18792s | train 1.0528 | val BPC 1.1592 | 3.1h left
+step 158000 |   18911s | train 1.0504 | val BPC 1.1608 | 3.1h left
+step 159000 |   19028s | train 1.0539 | val BPC 1.1588 | 3.0h left
+step 160000 |   19146s | train 1.0513 | val BPC 1.1577 | probe 68% | 3.0h left  * saved
+step 161000 |   19277s | train 1.0493 | val BPC 1.1607 | 3.0h left
+step 162000 |   19394s | train 1.0463 | val BPC 1.1578 | 2.9h left
+step 163000 |   19511s | train 1.0451 | val BPC 1.1573 | 2.9h left  * saved
+step 164000 |   19630s | train 1.0446 | val BPC 1.1625 | 2.9h left
+step 165000 |   19747s | train 1.0420 | val BPC 1.1588 | 2.8h left
+step 166000 |   19864s | train 1.0397 | val BPC 1.1563 | 2.8h left  * saved
+step 167000 |   19982s | train 1.0432 | val BPC 1.1575 | 2.8h left
+step 168000 |   20099s | train 1.0337 | val BPC 1.1587 | 2.7h left
+step 169000 |   20217s | train 1.0370 | val BPC 1.1523 | 2.7h left  * saved
+step 170000 |   20335s | train 1.0378 | val BPC 1.1534 | probe 68% | 2.7h left
+step 171000 |   20462s | train 1.0326 | val BPC 1.1524 | 2.6h left
+step 172000 |   20579s | train 1.0390 | val BPC 1.1527 | 2.6h left
+step 173000 |   20696s | train 1.0328 | val BPC 1.1572 | 2.6h left
+step 174000 |   20814s | train 1.0305 | val BPC 1.1539 | 2.5h left
+step 175000 |   20931s | train 1.0330 | val BPC 1.1595 | 2.5h left
+step 176000 |   21049s | train 1.0323 | val BPC 1.1526 | 2.5h left
+step 177000 |   21166s | train 1.0277 | val BPC 1.1537 | 2.4h left
+step 178000 |   21284s | train 1.0260 | val BPC 1.1551 | 2.4h left
+step 179000 |   21401s | train 1.0278 | val BPC 1.1509 | 2.4h left  * saved
+step 180000 |   21519s | train 1.0256 | val BPC 1.1570 | probe 65% | 2.3h left
+step 181000 |   21646s | train 1.0225 | val BPC 1.1528 | 2.3h left
+step 182000 |   21764s | train 1.0210 | val BPC 1.1546 | 2.3h left
+step 183000 |   21881s | train 1.0209 | val BPC 1.1555 | 2.2h left
+step 184000 |   21999s | train 1.0200 | val BPC 1.1499 | 2.2h left  * saved
+step 185000 |   22117s | train 1.0173 | val BPC 1.1546 | 2.2h left
+step 186000 |   22235s | train 1.0207 | val BPC 1.1519 | 2.1h left
+step 187000 |   22352s | train 1.0170 | val BPC 1.1508 | 2.1h left
+step 188000 |   22469s | train 1.0160 | val BPC 1.1512 | 2.1h left
+step 189000 |   22586s | train 1.0134 | val BPC 1.1514 | 2.0h left
+step 190000 |   22704s | train 1.0111 | val BPC 1.1562 | probe 69% | 2.0h left
+step 191000 |   22831s | train 1.0093 | val BPC 1.1518 | 2.0h left
+step 192000 |   22949s | train 1.0123 | val BPC 1.1509 | 1.9h left
+step 193000 |   23066s | train 1.0095 | val BPC 1.1505 | 1.9h left
+step 194000 |   23183s | train 1.0078 | val BPC 1.1497 | 1.9h left  * saved
+step 195000 |   23301s | train 1.0095 | val BPC 1.1477 | 1.8h left  * saved
+step 196000 |   23419s | train 1.0018 | val BPC 1.1504 | 1.8h left
+step 197000 |   23536s | train 1.0054 | val BPC 1.1463 | 1.8h left  * saved
+step 198000 |   23654s | train 1.0070 | val BPC 1.1569 | 1.7h left
+step 199000 |   23771s | train 1.0009 | val BPC 1.1490 | 1.7h left
+step 200000 |   23889s | train 1.0007 | val BPC 1.1494 | probe 69% | 1.7h left
+step 201000 |   24016s | train 1.0008 | val BPC 1.1493 | 1.6h left
+step 202000 |   24133s | train 0.9992 | val BPC 1.1503 | 1.6h left
+step 203000 |   24251s | train 1.0000 | val BPC 1.1483 | 1.6h left
+step 204000 |   24369s | train 0.9960 | val BPC 1.1495 | 1.5h left
+step 205000 |   24485s | train 0.9962 | val BPC 1.1475 | 1.5h left
+step 206000 |   24603s | train 0.9984 | val BPC 1.1509 | 1.5h left
+step 207000 |   24720s | train 0.9987 | val BPC 1.1499 | 1.4h left
+step 208000 |   24838s | train 0.9966 | val BPC 1.1582 | 1.4h left
+step 209000 |   24955s | train 0.9925 | val BPC 1.1484 | 1.4h left
+step 210000 |   25073s | train 0.9918 | val BPC 1.1542 | probe 66% | 1.3h left
+step 211000 |   25200s | train 0.9913 | val BPC 1.1527 | 1.3h left
+step 212000 |   25318s | train 0.9905 | val BPC 1.1465 | 1.3h left
+step 213000 |   25435s | train 0.9897 | val BPC 1.1508 | 1.2h left
+step 214000 |   25553s | train 0.9878 | val BPC 1.1520 | 1.2h left
+step 215000 |   25670s | train 0.9883 | val BPC 1.1496 | 1.2h left
+step 216000 |   25788s | train 0.9895 | val BPC 1.1480 | 1.1h left
+step 217000 |   25905s | train 0.9823 | val BPC 1.1488 | 1.1h left
+step 218000 |   26022s | train 0.9853 | val BPC 1.1445 | 1.1h left  * saved
+step 219000 |   26140s | train 0.9835 | val BPC 1.1496 | 1.0h left
+step 220000 |   26258s | train 0.9870 | val BPC 1.1491 | probe 74% | 1.0h left
+step 221000 |   26385s | train 0.9839 | val BPC 1.1548 | 1.0h left
+step 222000 |   26502s | train 0.9831 | val BPC 1.1493 | 0.9h left
+step 223000 |   26619s | train 0.9806 | val BPC 1.1481 | 0.9h left
+step 224000 |   26737s | train 0.9808 | val BPC 1.1465 | 0.9h left
+step 225000 |   26854s | train 0.9776 | val BPC 1.1443 | 0.8h left  * saved
+step 226000 |   26972s | train 0.9795 | val BPC 1.1551 | 0.8h left
+step 227000 |   27089s | train 0.9765 | val BPC 1.1481 | 0.8h left
+step 228000 |   27207s | train 0.9809 | val BPC 1.1475 | 0.7h left
+step 229000 |   27324s | train 0.9823 | val BPC 1.1483 | 0.7h left
+step 230000 |   27442s | train 0.9811 | val BPC 1.1525 | probe 60% | 0.7h left
+step 231000 |   27569s | train 0.9762 | val BPC 1.1529 | 0.6h left
+step 232000 |   27687s | train 0.9762 | val BPC 1.1483 | 0.6h left
+step 233000 |   27804s | train 0.9741 | val BPC 1.1464 | 0.6h left
+step 234000 |   27922s | train 0.9760 | val BPC 1.1556 | 0.5h left
+step 235000 |   28039s | train 0.9768 | val BPC 1.1541 | 0.5h left
+step 236000 |   28157s | train 0.9716 | val BPC 1.1442 | 0.5h left  * saved
+step 237000 |   28274s | train 0.9683 | val BPC 1.1472 | 0.4h left
+step 238000 |   28392s | train 0.9716 | val BPC 1.1454 | 0.4h left
+step 239000 |   28509s | train 0.9713 | val BPC 1.1460 | 0.4h left
+step 240000 |   28627s | train 0.9722 | val BPC 1.1468 | probe 68% | 0.3h left
+step 241000 |   28753s | train 0.9722 | val BPC 1.1466 | 0.3h left
+step 242000 |   28871s | train 0.9693 | val BPC 1.1476 | 0.3h left
+step 243000 |   28988s | train 0.9702 | val BPC 1.1588 | 0.2h left
+step 244000 |   29106s | train 0.9693 | val BPC 1.1489 | 0.2h left
+step 245000 |   29223s | train 0.9704 | val BPC 1.1566 | 0.2h left
+step 246000 |   29341s | train 0.9690 | val BPC 1.1520 | 0.1h left
+step 247000 |   29458s | train 0.9680 | val BPC 1.1469 | 0.1h left
+step 248000 |   29576s | train 0.9724 | val BPC 1.1462 | 0.1h left
+step 249000 |   29693s | train 0.9722 | val BPC 1.1575 | 0.0h left
+step 250000 |   29811s | train 0.9687 | val BPC 1.1591 | probe 66%
+best val BPC 1.1442 at step 236000 -> runs\p_e8b_alone_best.pt
+log -> runs\p_e8b_alone.csv
+final: best model, val BPC 1.0917 (all 4,999,999 bytes) | with at least 512 bytes of context: 1.0917 | next byte right 78.2% | first letters of words 3.072, other bytes 0.754
+final: best model, TEST BPC 1.0750 (all 4,999,999 bytes, never used for any choice) | with at least 512 bytes of context: 1.0750 | next byte right 78.6% | first letters of words 2.994, other bytes 0.746
+final: best model, knowledge probe 69.2% of 65 right
+samples -> runs\p_e8b_alone_samples.txt
