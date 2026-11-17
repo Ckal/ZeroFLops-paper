@@ -605,17 +605,19 @@ The ablation table (§3d above) lives only in the JSON — the writeup has **no
 ablation section at all**. The prose and the machine-readable results are two
 disconnected documents.
 
-### 8f. `src/c4/train.py --help` crashes
-```
-ValueError: unsupported format character ')' (0x29) at index 84
-```
-Cause: line 4018, the help string for `--abort-flat-below`:
-```python
-help="the flat rule only fires while the best holdout "
-     "agreement is below this (default 55%)")
-```
-The bare `%` in `55%)` is interpreted by argparse as a format specifier.
-Fix: `55%%`.
+### 8f. ~~`src/c4/train.py --help` crashes~~ — RESOLVED 2026-11-17
+
+Two separate causes, both fixed:
+1. `ImportError: attempted relative import with no known parent package` — the
+   module reaches two levels up (`..gf256_markov_lm`), so the repo root has to
+   be importable. The script now bootstraps `sys.path` and sets `__package__`
+   when run directly, so `python src/c4/train.py` and
+   `python -m src.c4.train` both work.
+2. `ValueError: unsupported format character ')'` — an unescaped `%` in the
+   `--abort-flat-below` help string (`55%` → `55%%`). argparse expands `%` in
+   help text, so every literal percent must be doubled.
+
+`--help` now exits 0 and prints the full option list in both invocation styles.
 
 ### 8g. Never-run stages
 Sentinels exist for 19 runs; the logs for 20. **No sentinel or log for:**

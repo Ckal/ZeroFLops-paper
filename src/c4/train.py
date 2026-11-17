@@ -48,6 +48,7 @@ import json
 import math
 import os
 import random
+import sys
 import time
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
@@ -55,6 +56,14 @@ from typing import List, Optional, Sequence, Tuple
 import numpy as np
 import torch
 import torch.nn.functional as F
+
+# Allow `python src/c4/train.py --help` (direct script) as well as
+# `python -m src.c4.train` (package). The relative imports below reach two
+# levels up (`..gf256_markov_lm`), so the repo root -- the parent of `src` --
+# has to be importable. When run as a module this is a no-op.
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    __package__ = "src.c4"
 
 from .board import Board, is_terminal
 from .corpus import (Game, games_to_lines, play_games, play_mixed_game,
@@ -4015,7 +4024,7 @@ def build_parser():
                          "flat rule (default 4)")
     ap.add_argument("--abort-flat-below", type=float, default=55.0,
                     help="the flat rule only fires while the best holdout "
-                         "agreement is below this (default 55%)")
+                         "agreement is below this (default 55%%)")
     ap.add_argument("--abort-on", choices=["warn", "abort"], default="warn",
                     help="what to do when an abort rule fires: 'warn' "
                          "records the finding and continues (default), "
