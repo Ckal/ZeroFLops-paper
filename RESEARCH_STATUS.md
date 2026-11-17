@@ -184,7 +184,21 @@ on it — it only ever learns from text it has already scored.
 |---|---|---|---|---|
 | e8b_cache | 1.0270 | 0.9756 | 0.0513 | rms 5e-06 |
 | e8b_alone | 1.0750 | 0.9990 | 0.0760 | rms 1e-05 |
+| e8f_alone | 1.1050 | 1.0481 | 0.0569 | rms 5e-06 |
+| e8l_cache | 1.0176 | 0.9804 | 0.0371 | rms 5e-06 |
 | e8l_cache | 1.0176 | 0.9795 | 0.0380 | rms 1e-05 |
+
+Four of the five readings are below 1.0 BPC; the best is **0.9756** (e8b_cache).
+The e8f_alone row is the only dynamic evaluation that stays above 1.0, and it is
+also the weakest model in the table — consistent with the ablation below.
+
+> **Reporting bug found and fixed 2026-11-17.** The report only globbed
+> `runs/p_*_eval.json`. Two dynamic evaluations written with a `d_` prefix
+> (`d_e8l_5e6_eval.json`, `d_e8falone_5e6_eval.json`) were therefore *silently
+> dropped* from the table above — which is why the e8f_alone and e8l@5e-06
+> readings were missing. `run_all.py --report` now discovers dynamic
+> evaluations by their **content** (presence of a `bpc_dyn` key) instead of by
+> file-name prefix, so no result can be lost to a naming convention again.
 
 Published reference: Transformer-XL 277 M with dynamic eval = 0.94.
 
@@ -518,40 +532,38 @@ python label_teacher.py --data data/smollm_subset_2GB.txt --out runs/teacher \
 
 ## 8. What is MISSING (the honest gaps)
 
-### 8a. Nothing from the new research is in git
-`git status --porcelain` shows **91 entries, all untracked** (`??`). Every
-script in §1a, the whole `paper/` tree, `search/`, and the enwik8 data are
-untracked. `git add -A` **fails outright**:
-```
-error: short read while indexing nul
-error: nul: failed to insert into database
-fatal: adding files failed
-```
-The `nul` file is 62 bytes of German Windows error text ("Es wurden zu viele
-Argumente angegeben. / Falscher Parameter.") from a botched shell redirect on
-2025-10-31. It is a Windows reserved device name, so git cannot index it.
+### 8a. ~~Nothing from the new research is in git~~ — RESOLVED 2026-11-17
 
-Excluding it, `git add -A -- . ':!nul'` stages **534 paths**, including
-**~3.6 GB of junk**: `data/enwik8*` (245 MB), `data/smollm_subset_2GB.txt`
-(2.1 GB), `data/enwik8.zip` (36 MB), and 108 files under `tmp/`.
+The whole research line is now committed and published:
+- GitHub: `https://github.com/Ckal/ZeroFLops-paper` (author: Christof Kaller),
+  419 files on `main`, both branches pushed.
+- Hugging Face: `https://huggingface.co/Chris4K/zeroflops-enwik8-lm` (private),
+  holding the V7 GF(256) artifact and the LM checkpoints.
 
-### 8b. `run_all.py --list` crashes
-```
-FileNotFoundError: [WinError 2] ... 'runs\\p_pilot_cache_best.pt'
-```
-`is_done()` → `stale()` → `os.path.getmtime(f)` assumes the checkpoint exists.
-It does not: the pilot checkpoints were deleted (only `p_pilot_*_result.json`
-and `.csv` remain). **The pipeline's own status command is broken**, so you
-cannot ask it what is left to do.
+The `nul` file (62 bytes of German Windows error text, a Windows reserved
+device name that git cannot index) and the bulk data were excluded via
+`.gitignore`; both are reproducible from the commands in §7.
 
-### 8c. The CI would fail on arrival
-`.github/workflows/ci.yml` (Oct 29, untracked) references:
-- `tests/test_sessions_unit.py` → **only exists at `tmp/test_sessions_unit.py`**
-- `tests/test_embedding_cookie.py` → **only exists at `tmp/test_embedding_cookie.py`**
-- `tools/run_regression_sweep.sh` → **only exists at `tmp/run_regression_sweep.sh`**
+### 8b. ~~`run_all.py --list` crashes~~ — RESOLVED 2026-11-17
 
-The `tests/` directory does not exist at all. The workflow has never run on any
-remote (no remote exists).
+The `stale` lambda called `os.path.getmtime()` on the checkpoint without
+checking that it exists. The pilot checkpoints were deleted (only
+`p_pilot_*_result.json` and `.csv` remain), so the pipeline's own status
+command crashed with `FileNotFoundError: 'runs\p_pilot_cache_best.pt'`.
+
+The lambda now also checks `os.path.exists(f)`. `run_all.py --list` exits 0
+and lists the whole pipeline with per-job done / to-do state.
+
+### 8c. ~~The CI would fail on arrival~~ — RESOLVED 2026-11-17
+
+The workflow referenced three paths that did not exist:
+- `tests/test_sessions_unit.py` → actually at `tmp/test_sessions_unit.py`
+- `tests/test_embedding_cookie.py` → actually at `tmp/test_embedding_cookie.py`
+- `tools/run_regression_sweep.sh` → actually at `tmp/run_regression_sweep.sh`
+
+All three paths are corrected in the committed `.github/workflows/ci.yml`, and
+both unit tests were run locally against the new paths: **47/47** and **18/18**
+checks pass.
 
 **GOOD NEWS:** the HF checkpoint the CI fetches is reachable and the pin is
 correct. I downloaded `https://huggingface.co/Chris4K/connect-four-gf256/resolve/main/best_hard.pt`

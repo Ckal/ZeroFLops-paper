@@ -1,6 +1,6 @@
 # Results
 
-Updated 2026-11-17 02:22. Bits per byte, lower is better (1.20 bits per byte means the text can be stored in 15% of its size).
+Updated 2026-11-17 03:08. Bits per byte, lower is better (1.20 bits per byte means the text can be stored in 15% of its size).
 
 - **best val**: the score on 2,048 windows used during training to pick the best checkpoint.
 - **val / test**: the best checkpoint on 20,480 windows (enwik8 runs: on every byte). The test text was never used for any choice.
@@ -39,6 +39,8 @@ Test text, every byte. After each window is scored the model takes one small tra
 |---|---|---|---|---|
 | e8b_cache | 1.0270 | 0.9756 | 0.0513 | rms 5e-06 |
 | e8b_alone | 1.0750 | 0.9990 | 0.0760 | rms 1e-05 |
+| e8f_alone | 1.1050 | 1.0481 | 0.0569 | rms 5e-06 |
+| e8l_cache | 1.0176 | 0.9804 | 0.0371 | rms 5e-06 |
 | e8l_cache | 1.0176 | 0.9795 | 0.0380 | rms 1e-05 |
 
 ## Tables alone, document cache, leave-one-out check

@@ -414,6 +414,7 @@ def jobs_analyze():
         j.append(dict(name=name, argv=argv, needs=[f] + ([a] if "--alone" in argv else []),
                       done_file=pp(name, "analysis.json"),
                       stale=lambda f=f, n=name: os.path.exists(pp(n, "analysis.json")) and
+                      os.path.exists(f) and
                       os.path.getmtime(f) > os.path.getmtime(pp(n, "analysis.json"))))
     return j
 
@@ -718,18 +719,46 @@ def _report(quiet):
                 pass
     rows.sort(key=lambda r: (RUN_ORDER.index(r["run"]) if r["run"] in RUN_ORDER else 99, r["run"]))
     evals, doms, dyns = [], {}, []
-    for path in sorted(glob.glob(rp(pre + "*_eval.json"))):
+    # Collect EVERY eval file, not just the ones whose name starts with the
+    # run prefix. A dynamic evaluation is identified by its CONTENT (it has
+    # a bpc_dyn key), not by its file name: ad-hoc runs written by hand
+    # (d_e8l_5e6_eval.json) use a different prefix and were therefore
+    # silently dropped from this report, which hid the fact that a fourth
+    # model scored below 1.0 BPC. Name conventions are for humans; the
+    # report must not depend on them.
+    seen_dyn = {}
+    for path in sorted(glob.glob(rp("*_eval.json"))):
         e = json.load(open(path))
-        name = os.path.basename(path)[len(pre):-10]
+        fname = os.path.basename(path)
+        # strip any leading run prefix so the table shows the model name
+        name = fname[:-10]
+        for pref in (pre,):
+            if name.startswith(pref):
+                name = name[len(pref):]
+                break
         if name.startswith("dom_") and "__" in name:          # domain scores: dom_<domain>__<run>
             dname, run = name[4:].split("__", 1)
             doms.setdefault(run, {})[dname] = e.get("bpc_warm", e.get("bpc"))
             continue
-        if name.startswith("dyn__"):
-            dyns.append((name[5:], e.get("bpc_slide", e.get("bpc")), e.get("bpc_dyn"), e.get("dyn", {})))
+        if "bpc_dyn" in e and e.get("bpc_dyn") is not None:    # dynamic evaluation
+            # the model name comes from the checkpoint it evaluated
+            ck = e.get("ckpt") or ""
+            run = os.path.basename(ck).replace("_best.pt", "").replace(".pt", "")
+            for pref in (pre,):
+                if run.startswith(pref):
+                    run = run[len(pref):]
+                    break
+            # the same model can be evaluated at several step sizes; keep
+            # the best (lowest) dynamic score for each model and lr
+            key = (run, e.get("dyn", {}).get("lr"))
+            prev = seen_dyn.get(key)
+            if prev is None or (e["bpc_dyn"] or 1e9) < (prev[1] or 1e9):
+                seen_dyn[key] = (run, e["bpc_dyn"], e.get("bpc_slide", e.get("bpc")), e.get("dyn", {}))
             continue
         evals.append(dict(name=name, bpc=e.get("bpc"), bpc_warm=e.get("bpc_warm"),
                           probe=e.get("probe"), tables=os.path.basename(e.get("hard") or "")))
+    for (run, _lr), (_r, b, a, y) in seen_dyn.items():
+        dyns.append((run, a, b, y))
     md = ["# Results", "", f"Updated {time.strftime('%Y-%m-%d %H:%M')}. Bits per byte, lower is better "
           "(1.20 bits per byte means the text can be stored in 15% of its size).", "",
           f"- **best val**: the score on 2,048 windows used during training to pick the best checkpoint.",
