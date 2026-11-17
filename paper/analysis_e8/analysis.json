@@ -2,7 +2,7 @@
  "models": {
   "feat": {
    "ckpt": "runs\\p_e8_cache_best.pt",
-   "hard": "C:\Users\<user>\\projects\\ZeroFLops-paper\\runs\\p_e8_tab_hard.pt",
+   "hard": "C:\\Users\\<user>\\projects\\ZeroFLops-paper\\runs\\p_e8_tab_hard.pt",
    "step": 178000,
    "val_bpc": 1.0874346751096178,
    "params": 38758144,

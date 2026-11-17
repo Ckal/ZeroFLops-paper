@@ -1,8 +1,8 @@
 {
  "models": {
   "feat": {
-   "ckpt": "runs\\p_e8l_cache_best.pt",
-   "hard": "C:\Users\<user>\\projects\\ZeroFLops-paper\\runs\\p_e8_tab_hard.pt",
+   "ckpt": "runs/p_e8l_cache_best.pt",
+   "hard": "runs/p_e8_tab_hard.pt",
    "step": 393000,
    "val_bpc": 1.059787031690407,
    "params": 39477760,
@@ -14,7 +14,7 @@
    "hard_feature": true
   },
   "alone": {
-   "ckpt": "runs\\p_e8f_alone_best.pt",
+   "ckpt": "runs/p_e8f_alone_best.pt",
    "hard": null,
    "step": 200000,
    "val_bpc": 1.1906452501979372,
