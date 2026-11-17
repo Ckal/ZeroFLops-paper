@@ -175,6 +175,11 @@ Note the e8l probe cell is empty — no samples file was ever produced for it (�
 count tables + a document cache, so they belong with "extra memory or adapts at
 test time" results, and the table size must be reported next to the parameter count.
 
+The count table is `runs/p_e8_tab_hard.pt` (published as `p_e8_tab_hard.pt` on
+Hugging Face, 1.13 GB): **81,785,402 integer entries** over 5 experts
+(`ngram_o2`, `ngram`, `ngram_long`, `word`, `cache`), shared by both published
+enwik8 checkpoints.
+
 ### 3c. Dynamic evaluation — learning while reading
 
 Test text, every byte. After scoring each window the model takes one small step
@@ -537,7 +542,7 @@ python label_teacher.py --data data/smollm_subset_2GB.txt --out runs/teacher \
 The whole research line is now committed and published:
 - GitHub: `https://github.com/Ckal/ZeroFLops-paper` (author: Christof Kaller),
   419 files on `main`, both branches pushed.
-- Hugging Face: `https://huggingface.co/Chris4K/zeroflops-enwik8-lm` (private),
+- Hugging Face: `https://huggingface.co/Chris4K/zeroflops-enwik8-lm` (public),
   holding the V7 GF(256) artifact and the LM checkpoints.
 
 The `nul` file (62 bytes of German Windows error text, a Windows reserved
@@ -667,9 +672,12 @@ The `loo` *stage* (train on the counted half, test on the other half) never
 ran, but it was never the mechanism being relied on. It is a nice-to-have
 control, not a missing foundation.
 
-### 8i. The README describes only Line A
-It advertises "Hard BPC = 3.071" and the GF(256) package. The enwik8
-residual-LM line — with the better headline number — is invisible to it.
+### 8i. The README describes only Line A — RESOLVED 2026-11-17
+It used to advertise only "Hard BPC = 3.071" and the GF(256) package; the
+enwik8 residual-LM line — with the better headline number — was invisible to
+it. The README now leads with both lines in a comparison table, and the
+enwik8 line carries the 0.9756 BPC result, the ablation table and the
+Hugging Face checkpoint links.
 
 ---
 
