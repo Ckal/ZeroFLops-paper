@@ -50,6 +50,12 @@ counting configuration.
 
 ### Ablation (val BPC)
 
+Measured on the **`e8l_cache`** checkpoint (39.5 M params, 512 ctx) in a
+separate harness — see [`paper/analysis_e8l/analysis.json`](paper/analysis_e8l/analysis.json).
+Its baseline ("memory as trained", 1.0630) sits above that run's training-time
+validation (1.0350) because the two are measured on different window sets. Read
+the rows as deltas against their own baseline.
+
 | configuration | val BPC |
 |---|---|
 | memory as trained | **1.0630** |
@@ -65,6 +71,10 @@ counting configuration.
 The last row is the control that matters: feeding counts from the wrong window
 collapses the model from 1.0630 to 12.8174 BPC. The mechanism genuinely reads
 the current document; it is not a generic prior.
+
+The sibling file `paper/analysis_e8/analysis.json` holds the same ablation for
+the shorter `e8_cache` run (38.8 M params, 200k steps), with its own baseline
+(1.0901 → 14.0315).
 
 ### Checkpoints and model card
 

@@ -209,6 +209,11 @@ Published reference: Transformer-XL 277 M with dynamic eval = 0.94.
 
 ### 3d. Ablation (`paper/analysis_e8l/analysis.json`, Nov 16 15:31)
 
+Measured on the **`e8l_cache`** checkpoint (39.5 M params, 512 ctx, 400k steps)
+in a separate harness. Its baseline ("memory as trained", 1.0630) sits above
+that run's training-time validation (1.0350) because the two are measured on
+different window sets — read the rows as deltas against their own baseline.
+
 | configuration | val BPC |
 |---|---|
 | memory as trained | **1.0630** |
