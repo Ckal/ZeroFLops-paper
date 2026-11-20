@@ -19,6 +19,11 @@ separate artifacts.
 |---|---|---|---|---|
 | `e8b_cache` | 86.3 M | 1024 | 1.0270 | **0.9756** |
 | `e8l_cache` | 39.5 M | 512 | 1.0176 | 0.9795 |
+| `e8b_alone` | 85.3 M | 1024 | 1.0750 | 0.9990 |
+
+The third row is the **no-memory** control: same size and context as
+`e8b_cache`, but with the count tables and document cache switched off. It
+carries no table file at all, so it downloads and runs on its own.
 
 Published comparison on the same 5 MB test file: Transformer-XL 24 layers /
 277 M reaches 0.99 static, **0.94 with dynamic evaluation** (Dai et al. 2019).
@@ -85,11 +90,14 @@ full write-up.
 |---|---|---|
 | `enwik8_e8b_cache_best.pt` | e8b_cache — the strongest dynamic-evaluation model | 331 MB |
 | `enwik8_e8l_cache_best.pt` | e8l_cache — the longest-trained model (400k steps) | 152 MB |
+| `enwik8_e8b_alone_best.pt` | e8b_alone — the no-memory control (85.3M, test 1.0750, dynamic 0.9990) | 334 MB |
 | `p_e8_tab_hard.pt` | the hard table (5 experts, 81,785,402 entries) used by **both** checkpoints | 1.13 GB |
 
-**`p_e8_tab_hard.pt` is required.** Both checkpoints store the table path in
-their `hard_path` field (`p_e8_tab_hard.pt`) and resolve it relative to the
-checkpoint's own directory, so download all three files **into the same folder**.
+**`p_e8_tab_hard.pt` is required** by the two cache checkpoints. They store the
+table path in their `hard_path` field (`p_e8_tab_hard.pt`) and resolve it
+relative to the checkpoint's own directory, so download all three files **into
+the same folder**. `enwik8_e8b_alone_best.pt` is the exception — it has no
+table and runs on its own.
 
 ### Where the numbers live
 
