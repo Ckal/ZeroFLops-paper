@@ -54,6 +54,7 @@ much to trust each expert.
 |---|---|---|---|
 | `enwik8_e8b_cache_best.pt` | e8b_cache — the strongest dynamic-evaluation model (val 1.0463, dynamic **0.9756**) | 331 MB | `f916c445e448f07478de8d31e3bc707898a0675dfec44f947a17127ae50f594c` |
 | `enwik8_e8l_cache_best.pt` | e8l_cache — the longest-trained model (400k steps, val 1.0350) | 152 MB | `8f51f30dbdf5a43f82e7d2d686edd4127434ec878b984381a2662d76ab0cc636` |
+| `enwik8_e8b_alone_best.pt` | e8b_alone — the **no-memory** baseline (85.3M, test 1.0750, dynamic 0.9990). Needs no table file, so it stands alone | 334 MB | `ea92db1d8554e0534daf24998dcf162aec1aa37227fa8f8771f5d44b59bccf54` |
 | `p_e8_tab_hard.pt` | the hard table (5 experts, 81,785,402 entries) used by **both** enwik8 checkpoints | 1.13 GB | `6ef63a411e96646766fb1bf813053ad698438aa7787ded99f9d7fefa183fd45d` |
 | `gf256_hard_model_v7.pt` | the GF(256) Connect Four V7 hard checkpoint — a *different* research line, published here so the artifact is not only on GitHub | 113 MB | `e196957c349be328b50edd975e6bba9a7a47115c49139279ebb85ab882d2d827` |
 
