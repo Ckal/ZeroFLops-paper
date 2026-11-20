@@ -187,3 +187,10 @@ model.eval()
 ## Citation
 
 TBD — the paper is in preparation.
+
+## Further reading
+
+- Discussion #1 — the release write-up (ablation, mechanism, file list).
+- Discussion #2 — "0.9756 BPC on enwik8 — trained in 10 hours on one GPU",
+  including the wrong-window control that shows the model reads the document
+  rather than acting as a generic prior.
