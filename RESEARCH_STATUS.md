@@ -176,7 +176,7 @@ count tables + a document cache, so they belong with "extra memory or adapts at
 test time" results, and the table size must be reported next to the parameter count.
 
 The count table is `runs/p_e8_tab_hard.pt` (published as `p_e8_tab_hard.pt` on
-Hugging Face, 1.13 GB): **81,785,402 integer entries** over 5 experts
+Hugging Face, 1.18 GB): **81,785,402 integer entries** over 5 experts
 (`ngram_o2`, `ngram`, `ngram_long`, `word`, `cache`), shared by both published
 enwik8 checkpoints.
 

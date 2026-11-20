@@ -140,7 +140,7 @@ https://github.com/Ckal/ZeroFLops-paper
 | Transformer-XL 277M dynamic eval | 0.94 | Dai et al. 2019 |
 | table entries | 81,785,402 | HF model card |
 | extra input dims | 1303 = 256×5 + 23 | checkpoint `gpt.extra.weight` |
-| table size on disk | 1.13 GB | HF resolve headers |
+| table size on disk | 1.18 GB | HF resolve headers |
 | headline training time | 10.45 h | `paper/results.csv` |
 | GPU | 1× RTX 5090 | `nvidia-smi`, checkpoint `args.device=cuda` |
 | campaign total | ~60 GPU-h over 15 runs | sum of `hours` column |

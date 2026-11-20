@@ -88,16 +88,16 @@ full write-up.
 
 | file | what it is | size |
 |---|---|---|
-| `enwik8_e8b_cache_best.pt` | e8b_cache — the strongest dynamic-evaluation model | 331 MB |
-| `enwik8_e8l_cache_best.pt` | e8l_cache — the longest-trained model (400k steps) | 152 MB |
-| `enwik8_e8b_alone_best.pt` | e8b_alone — the no-memory control (85.3M, test 1.0750, dynamic 0.9990) | 334 MB |
-| `p_e8_tab_hard.pt` | the hard table (5 experts, 81,785,402 entries) used by **both** checkpoints | 1.13 GB |
+| `enwik8_e8b_cache_best.pt` | e8b_cache — the strongest dynamic-evaluation model | 345 MB |
+| `enwik8_e8l_cache_best.pt` | e8l_cache — the longest-trained model (400k steps) | 158 MB |
+| `enwik8_e8b_alone_best.pt` | e8b_alone — the no-memory control (85.3M, test 1.0750, dynamic 0.9990) | 341 MB |
+| `p_e8_tab_hard.pt` | the hard table (5 experts, 81,785,402 entries) used by the **two memory** checkpoints | 1.18 GB |
 
 **`p_e8_tab_hard.pt` is required** by the two cache checkpoints. They store the
 table path in their `hard_path` field (`p_e8_tab_hard.pt`) and resolve it
-relative to the checkpoint's own directory, so download all three files **into
-the same folder**. `enwik8_e8b_alone_best.pt` is the exception — it has no
-table and runs on its own.
+relative to the checkpoint's own directory, so download the table **into the
+same folder** as the checkpoint. `enwik8_e8b_alone_best.pt` is the exception —
+it has no table and runs on its own.
 
 ### Where the numbers live
 
