@@ -131,6 +131,56 @@ https://github.com/Ckal/ZeroFLops-paper
 
 ---
 
+## 2b. X — the "models and code are online" update (the one to post now)
+
+The user's own draft, tightened to fit X's 280-character limit (every URL
+counts as 23 characters). All three BPC pairs verified against
+`paper/results.md`; `~10 h` is `e8b_cache`'s measured 10.45 h.
+
+**Single post** — X-counted 277, raw 320:
+
+```
+Models + code are online.
+
+enwik8 test, bits/byte (lower is better):
+• 39.5M: 1.018 / 0.980 dynamic
+• 86.3M: 1.027 / 0.976
+• 85.3M no memory: 1.075 / 0.999
+
+~10 h on one RTX 5090. Caveat: 82M count entries (1.2 GB).
+
+Model: https://huggingface.co/Chris4K/zeroflops-enwik8-lm
+Code: https://github.com/Ckal/ZeroFLops-paper
+```
+
+**3-post thread** — keeps the user's exact wording, all three fit:
+
+> **1/3**
+> Update: models and code are online.
+>
+> enwik8 test, bits per byte (lower is better):
+> • 39.5M params: 1.018, and 0.980 with dynamic evaluation (learning while reading)
+> • 86.3M params: 1.027 / 0.976
+> • 85.3M without the memory: 1.075 / 0.999
+
+> **2/3**
+> Honest caveat: the tables hold 82M count entries (a 1.2 GB file) on top of the parameters. The memory is built by counting, no gradients, but the model still runs a normal transformer.
+
+> **3/3**
+> Trained in ~10 h on one RTX 5090. Model + code:
+> https://huggingface.co/Chris4K/zeroflops-enwik8-lm
+> https://github.com/Ckal/ZeroFLops-paper
+
+**Corrections applied to the user's draft:**
+
+| draft said | corrected to | why |
+|---|---|---|
+| "a 1.1 GB file" | 1.2 GB | 1.1 GB is the binary-GiB value (1,182,660,751 bytes = 1.101 GiB = 1.18 GB). HF renders decimal, so a reader downloading sees "1.18 GB". |
+| no training time | ~10 h on one RTX 5090 | `e8b_cache` measured 10.45 h (`paper/results.csv`). The 39.5M `e8l_cache` is 9.04 h; the 85.3M `e8b_alone` is 8.28 h. "A few hours" is wrong for all three. |
+| — | "no memory" label on the 85.3M row | makes the ablation read as a control rather than a third model size |
+
+---
+
 ## Fact sheet (for your own checking)
 
 | claim | value | source |
